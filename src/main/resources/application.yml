@@ -1,0 +1,31 @@
+spring:
+  social:
+    facebook:
+      app-id: 498747050475693
+      app-secret: fca6b3fedcbd6b35c0b692b3d084b7a8
+      page:
+        accessToken: EAAHFm5jGwK0BABBgxxPtRgO0hqFzSDCR4KKgkrgTcYLmqTLy7JZCnmJDpZB5163HPYZA7QrZAHXJBbMHFuDAtEkyol2I7fKXbfp3UgBxgKbqtznZADwZBZCZB8ZCqoMSaznbDbi63bAoW9QCkvvbkwKupimnS16Upx9BjMxwrUrAuwQZDZD
+  data:
+    mongodb:
+      host: 127.0.0.1
+      port: 27017
+      dbname: taxi
+    rest:
+      detection-strategy: annotated
+      return-body-on-create: true
+      return-body-on-update: true
+  jackson:
+    serialization:
+      write_dates_as_timestamps: false
+
+messenger4j:
+  verifyToken: token
+
+google:
+  map:
+    api:
+      key: AIzaSyACkjaKFrlx1-q-mzKzUISJik7DskFEstw
+
+server:
+  port: 8080
+
