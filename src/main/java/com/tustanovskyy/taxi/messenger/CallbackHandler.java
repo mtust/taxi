@@ -2,22 +2,11 @@ package com.tustanovskyy.taxi.messenger;
 
 import com.github.messenger4j.Messenger;
 import com.github.messenger4j.exception.MessengerVerificationException;
-import com.github.messenger4j.send.MessagePayload;
-import com.github.messenger4j.send.NotificationType;
-import com.github.messenger4j.send.message.TextMessage;
-import com.github.messenger4j.send.recipient.IdRecipient;
 import com.github.messenger4j.webhook.event.TextMessageEvent;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.maps.GeoApiContext;
-import com.google.maps.GeocodingApi;
-import com.google.maps.model.GeocodingResult;
-import com.tustanovskyy.taxi.document.User;
-import com.tustanovskyy.taxi.repository.UserRepositoryRestResources;
+import com.tustanovskyy.taxi.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import java.time.Instant;
 
 import static com.github.messenger4j.Messenger.*;
-import static java.util.Optional.empty;
 import static java.util.Optional.of;
 
 
@@ -34,7 +22,7 @@ import static java.util.Optional.of;
 public class CallbackHandler {
 
     @Autowired
-    UserRepositoryRestResources userRepositoryRestResources;
+    UserRepository userRepositoryRestResources;
 
     private static final Logger logger = LoggerFactory.getLogger(CallbackHandler.class);
 

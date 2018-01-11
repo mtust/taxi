@@ -2,16 +2,19 @@ package com.tustanovskyy.taxi.document;
 
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.google.maps.model.GeocodedWaypoint;
-import com.google.maps.model.GeocodingResult;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 
 @Document
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Ride {
 
     @Id
@@ -20,9 +23,11 @@ public class Ride {
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm")
     LocalDateTime date;
 
-    GeocodingResult addressFrom;
-    GeocodingResult addressTo;
+    Point pointFrom;
+    Integer distanceFrom;
+    Point pointTo;
+    Integer distanceTo;
 
-    GeocodedWaypoint geocodedWaypoint;
+    User user;
 
 }
