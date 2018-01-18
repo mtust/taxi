@@ -11,6 +11,7 @@ import java.util.Collection;
 
 @RestController
 @RequestMapping(path = "ride")
+@CrossOrigin(origins = "*")
 public class RideResource {
 
     @Autowired
