@@ -10,5 +10,7 @@ public interface UserService {
 
     Collection<User> findPartners(User user);
 
+    Collection<User> findPartners(String userId);
+
     User createUser(User user);
 }

@@ -67,12 +67,19 @@ public class UserServiceImpl implements UserService {
             this.messenger.send(messagePayload);
     }
 
+    public Collection<User> findPartners(String userId) {
+        User user = userRepository.findOne(userId);
+        return findPartners(user);
+    }
+
     @Override
     @Transactional
     public Collection<User> findPartners(User user) {
         Ride currentRide = user.getActiveRide();
-        return rideService.findPartnersRide(currentRide.getId()).stream().map(Ride::getUser).collect(Collectors.toList());
-
+        return rideService.findPartnersRide(currentRide.getId())
+                .stream()
+                .map(Ride::getUser)
+                .collect(Collectors.toList());
     }
 
     @Override

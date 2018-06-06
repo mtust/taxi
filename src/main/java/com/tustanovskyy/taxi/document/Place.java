@@ -1,12 +1,11 @@
 package com.tustanovskyy.taxi.document;
 
-
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.google.maps.model.Geometry;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
@@ -15,20 +14,16 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Ride {
+public class Place {
+
     @Id
     String id;
 
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm")
     LocalDateTime date;
 
-    Point pointFrom;
-    Integer distanceFrom;
-    Point pointTo;
-    Integer distanceTo;
-    Place placeFrom;
-    Place placeTo;
-    Boolean isActive;
-    User user;
+    Geometry geometry;
+    String name;
+    Integer distance;
 
 }
