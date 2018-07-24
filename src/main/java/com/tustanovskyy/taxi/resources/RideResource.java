@@ -26,9 +26,9 @@ public class RideResource {
     }
 
 
-    @GetMapping
-    public Collection<Ride> findPartners(String rideId) {
-        return rideService.findPartnersRide(rideId);
+    @GetMapping("{id}")
+    public Collection<Ride> findPartners(@PathVariable String id) {
+        return rideService.findPartnersRide(id);
     }
 
     @RequestMapping(path = "partner", method = RequestMethod.GET)

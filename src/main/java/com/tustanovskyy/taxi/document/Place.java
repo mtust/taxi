@@ -26,4 +26,5 @@ public class Place {
     String name;
     Integer distance;
 
+
 }
