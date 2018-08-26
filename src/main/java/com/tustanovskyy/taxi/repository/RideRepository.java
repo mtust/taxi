@@ -12,10 +12,10 @@ import java.util.List;
 
 @Repository
 public interface RideRepository extends MongoRepository<Ride, ObjectId> {
-    List<Ride> findByPointFromNearAndPointToNear(Point pointTo, Distance distanceTo, Point pointFrom, Distance distanceFrom);
-    @Query("{pointTo : { $geoNear : {$geometry :  {type: 'Point', coordinates: [?0, ?1]}, $maxDistance : ?2}}}")
-    List<Ride> findByPointToNear(double x, double y, Integer distanceTo);
-    @Query("{pointFrom : { $geoNear : {$geometry :  {type: 'Point', coordinates: [?0, ?1]}, $maxDistance : ?2}}}")
-    List<Ride> findByPointFromNear(double x, double y, Integer distanceFrom);
+    List<Ride> findByPlaceFrom_PointNearAndPlaceTo_PointNear(Point pointTo, Distance distanceTo, Point pointFrom, Distance distanceFrom);
+    @Query("{placeTo : {point : { $geoNear : {$geometry :  {type: 'Point', coordinates: [?0, ?1]}, $maxDistance : ?2}}}}")
+    List<Ride> findByPlaceTo_PointNear(double x, double y, Integer distanceTo);
+    @Query("{placeFrom : {point : { $geoNear : {$geometry :  {type: 'Point', coordinates: [?0, ?1]}, $maxDistance : ?2}}}}")
+    List<Ride> findByPlaceFrom_PointNear(double x, double y, Integer distanceFrom);
 
 }

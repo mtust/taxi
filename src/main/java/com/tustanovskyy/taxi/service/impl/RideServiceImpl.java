@@ -1,6 +1,7 @@
 package com.tustanovskyy.taxi.service.impl;
 
 import com.google.maps.model.Geometry;
+import com.tustanovskyy.taxi.document.Place;
 import com.tustanovskyy.taxi.document.Ride;
 import com.tustanovskyy.taxi.repository.RideRepository;
 import com.tustanovskyy.taxi.repository.UserRepository;
@@ -24,9 +25,10 @@ public class RideServiceImpl implements RideService {
     UserRepository userRepository;
 
     @Override
+    @Transactional
     public Ride createRide(Ride ride) {
-        ride.setPointFrom(createPointFromGeometry(ride.getPlaceFrom().getGeometry()));
-        ride.setPointTo(createPointFromGeometry(ride.getPlaceTo().getGeometry()));
+//        ride.setPointFrom(createPointFromGeometry(ride.getPlaceFrom().getGeometry()));
+//        ride.setPointTo(createPointFromGeometry(ride.getPlaceTo().getGeometry()));
         return rideRepository.save(ride);
     }
 
@@ -36,12 +38,14 @@ public class RideServiceImpl implements RideService {
 
     @Override
     public Collection<Ride> findPartnersRide(Ride currentRide) {
-        List<Ride> ridesFrom = rideRepository.findByPointFromNear(currentRide.getPointFrom().getX(),
-                        currentRide.getPointFrom().getY(),
-                        currentRide.getDistanceFrom());
-        List<Ride> ridesTo = rideRepository.findByPointToNear(currentRide.getPointTo().getX(),
-                        currentRide.getPointTo().getY(),
-                        currentRide.getDistanceTo());
+        Place placeFrom = currentRide.getPlaceFrom();
+        List<Ride> ridesFrom = rideRepository.findByPlaceFrom_PointNear(placeFrom.getPoint().getX(),
+                        placeFrom.getPoint().getY(),
+                        placeFrom.getDistance());
+        Place placeTo = currentRide.getPlaceTo();
+        List<Ride> ridesTo = rideRepository.findByPlaceTo_PointNear(placeTo.getPoint().getX(),
+                        placeTo.getPoint().getY(),
+                        placeTo.getDistance());
         return ridesFrom
                 .stream()
                 .filter(rideFrom -> ridesTo.contains(rideFrom) && !rideFrom.equals(currentRide))
@@ -53,5 +57,16 @@ public class RideServiceImpl implements RideService {
     public Collection<Ride> findPartnersRide(String rideId) {
         Ride currentRide = rideRepository.findOne(new ObjectId(rideId));
         return this.findPartnersRide(currentRide);
+    }
+
+    @Override
+    @Transactional
+    public Ride findRide(String rideId) {
+        return rideRepository.findOne(new ObjectId(rideId));
+    }
+
+    @Override
+    public Collection<Ride> getRides() {
+        return rideRepository.findAll();
     }
 }

@@ -6,7 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
@@ -22,10 +21,6 @@ public class Ride {
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm")
     LocalDateTime date;
 
-    Point pointFrom;
-    Integer distanceFrom;
-    Point pointTo;
-    Integer distanceTo;
     Place placeFrom;
     Place placeTo;
     Boolean isActive;

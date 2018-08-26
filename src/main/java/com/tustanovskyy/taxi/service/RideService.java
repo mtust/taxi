@@ -12,4 +12,8 @@ public interface RideService {
     Collection<Ride> findPartnersRide(Ride ride);
 
     Collection<Ride> findPartnersRide(String rideId);
+
+    Collection<Ride> getRides();
+
+    Ride findRide(String rideId);
 }

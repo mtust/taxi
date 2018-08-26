@@ -25,15 +25,14 @@ public class RideResource {
         return rideService.createRide(ride);
     }
 
-
     @GetMapping("{id}")
-    public Collection<Ride> findPartners(@PathVariable String id) {
-        return rideService.findPartnersRide(id);
+    public Ride ride(@PathVariable String id) {
+        return rideService.findRide(id);
     }
 
-    @RequestMapping(path = "partner", method = RequestMethod.GET)
-    public Collection<User> findPartners(@RequestBody User user) {
-        return userService.findPartners(user);
+    @GetMapping
+    public Collection<Ride> findPartners(@RequestParam("ride") String id) {
+        return rideService.findPartnersRide(id);
     }
 
 }

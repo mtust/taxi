@@ -4,10 +4,7 @@ import com.tustanovskyy.taxi.document.User;
 import com.tustanovskyy.taxi.service.RideService;
 import com.tustanovskyy.taxi.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
 
@@ -26,10 +23,14 @@ public class UserResources {
         return userService.createUser(user);
     }
 
-    @GetMapping({"userId/partner"})
-    public Collection<User> findPartner(@PathVariable String userId) {
-        return userService.findPartners(userId);
+    @GetMapping("{userId}")
+    public User findUser(@PathVariable String userId) {
+        return userService.findUser(userId);
+    }
 
+    @GetMapping
+    public Collection<User> findPartner(@RequestParam String userId) {
+        return userService.findPartners(userId);
     }
 
 }
