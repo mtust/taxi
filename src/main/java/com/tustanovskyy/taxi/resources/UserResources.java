@@ -10,6 +10,8 @@ import java.util.Collection;
 
 
 @RestController
+@CrossOrigin(origins = "*")
+@RequestMapping("users")
 public class UserResources {
 
     @Autowired

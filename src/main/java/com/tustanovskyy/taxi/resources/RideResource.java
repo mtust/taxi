@@ -4,14 +4,16 @@ import com.tustanovskyy.taxi.document.Ride;
 import com.tustanovskyy.taxi.document.User;
 import com.tustanovskyy.taxi.service.RideService;
 import com.tustanovskyy.taxi.service.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
 
 @RestController
-@RequestMapping(path = "ride")
+@RequestMapping(path = "rides")
 @CrossOrigin(origins = "*")
+@Slf4j
 public class RideResource {
 
     @Autowired
@@ -27,11 +29,13 @@ public class RideResource {
 
     @GetMapping("{id}")
     public Ride ride(@PathVariable String id) {
+        log.info("id: " + id);
         return rideService.findRide(id);
     }
 
     @GetMapping
-    public Collection<Ride> findPartners(@RequestParam("ride") String id) {
+    public Collection<Ride> findPartners(@RequestParam("rideId") String id) {
+        log.info("id: " + id);
         return rideService.findPartnersRide(id);
     }
 
