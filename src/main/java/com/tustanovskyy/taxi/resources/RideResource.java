@@ -1,7 +1,6 @@
 package com.tustanovskyy.taxi.resources;
 
 import com.tustanovskyy.taxi.document.Ride;
-import com.tustanovskyy.taxi.document.User;
 import com.tustanovskyy.taxi.service.RideService;
 import com.tustanovskyy.taxi.service.UserService;
 import lombok.extern.slf4j.Slf4j;
