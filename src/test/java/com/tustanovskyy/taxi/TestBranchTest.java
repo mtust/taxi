@@ -9,6 +9,6 @@ public class TestBranchTest {
     public void prepareBeforeTest(){
         boolean a = true;
         Assert.assertTrue("Verify conditions", a);
-        Assert.assertTrue("Verify conditions", false);
+        Assert.assertTrue("Verify conditions false", false);
     }
 }
