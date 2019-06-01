@@ -10,5 +10,7 @@ public class TestBranchTest {
         boolean a = true;
         Assert.assertTrue("Verify conditions", a);
         Assert.assertTrue("Verify conditions false2", false);
+        Assert.assertTrue("Verify conditions false3", false);
+
     }
 }
