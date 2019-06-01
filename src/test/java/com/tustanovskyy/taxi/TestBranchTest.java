@@ -8,13 +8,13 @@ public class TestBranchTest {
 
     @BeforeClass
     public void prepareBeforeTest(){
-        boolean a = true;
-        Assert.assertTrue("Verify conditions", a);
+        boolean as = true;
+        Assert.assertTrue("Verify conditions", as);
         Assert.assertTrue("Verify conditions false2", false);
     }
 
     @Test
-    public  void verefySmth(){
+    public  void verefySmth1234(){
         Assert.assertFalse("Verify", true);
     }
 
