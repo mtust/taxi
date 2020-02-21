@@ -3,24 +3,33 @@ package com.tustanovskyy.taxi.document;
 
 import com.mongodb.gridfs.GridFSFile;
 import lombok.Data;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
+import javax.persistence.*;
 import java.util.List;
 
-@Document
+@Entity
+@Table(name = "users")
 @Data
 public class User {
 
     @Id
-    String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
 
+    @Column
     String facebookId;
+    @Column
     String name;
+    @Column
     String surname;
-    GridFSFile photo;
+    @Column
+    String email;
+//    @Column
+//    GridFSFile photo;
 
-    List<Ride> historicalRides;
-    Ride activeRide;
+
+
+//    List<Ride> historicalRides;
+//    Ride activeRide;
 
 }

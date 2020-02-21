@@ -6,8 +6,6 @@ import com.tustanovskyy.taxi.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collection;
-
 
 @RestController
 @CrossOrigin(origins = "*")
@@ -21,18 +19,23 @@ public class UserResources {
     RideService rideService;
 
     @PostMapping
-    public User createUser(User user) {
+    public User createUser(@RequestBody User user) {
         return userService.createUser(user);
     }
 
     @GetMapping("{userId}")
-    public User findUser(@PathVariable String userId) {
+    public User findUser(@PathVariable Long userId) {
         return userService.findUser(userId);
     }
 
-    @GetMapping
-    public Collection<User> findPartner(@RequestParam String userId) {
-        return userService.findPartners(userId);
+    @GetMapping("facebook/{facebookId}")
+    public User findUserByFacebookId(@PathVariable String facebookId) {
+        return userService.findUserByFacebookId(facebookId);
     }
+
+//    @GetMapping
+//    public Collection<User> findPartner(@RequestParam String userId) {
+//        return userService.findPartners(userId);
+//    }
 
 }

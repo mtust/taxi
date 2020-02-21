@@ -60,7 +60,7 @@ public class RideServiceImpl implements RideService {
     @Override
     @Transactional
     public Collection<Ride> findPartnersRide(String rideId) {
-        Ride currentRide = rideRepository.findOne(new ObjectId(rideId));
+        Ride currentRide = rideRepository.findById(new ObjectId(rideId)).get();
         log.info("ride: " + currentRide);
         return this.findPartnersRide(currentRide);
     }
@@ -68,7 +68,7 @@ public class RideServiceImpl implements RideService {
     @Override
     @Transactional
     public Ride findRide(String rideId) {
-        return rideRepository.findOne(new ObjectId(rideId));
+        return rideRepository.findById(new ObjectId(rideId)).get();
     }
 
     @Override

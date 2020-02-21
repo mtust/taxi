@@ -8,11 +8,13 @@ public interface UserService {
 
     void createRideFromFacebook(String userFacebookId, String text) throws Exception;
 
-    Collection<User> findPartners(User user);
+//    Collection<User> findPartners(User user);
 
-    Collection<User> findPartners(String userId);
+//    Collection<User> findPartners(String userId);
 
     User createUser(User user);
 
-    User findUser(String userId);
+    User findUser(Long userId);
+
+    User findUserByFacebookId(String facebookId);
 }
