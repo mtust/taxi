@@ -32,10 +32,15 @@ public class RideResource {
         return rideService.findRide(id);
     }
 
+//    @GetMapping
+//    public Collection<Ride> findPartners(@RequestParam("rideId") String id) {
+//        log.info("id: " + id);
+//        return rideService.findPartnersRide(id);
+//    }
+
     @GetMapping
-    public Collection<Ride> findPartners(@RequestParam("rideId") String id) {
-        log.info("id: " + id);
-        return rideService.findPartnersRide(id);
+    public Collection<Ride> rides() {
+        return rideService.getRides();
     }
 
 }

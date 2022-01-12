@@ -17,4 +17,8 @@ public interface UserService {
     User findUser(Long userId);
 
     User findUserByFacebookId(String facebookId);
+
+    void sendVerificationCode(String phoneNumber);
+
+    void validateCode(String code, String phoneNumber);
 }

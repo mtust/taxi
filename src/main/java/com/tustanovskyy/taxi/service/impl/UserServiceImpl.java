@@ -12,23 +12,33 @@ import com.google.maps.GeocodingApi;
 import com.google.maps.model.GeocodingResult;
 import com.tustanovskyy.taxi.document.Ride;
 import com.tustanovskyy.taxi.document.User;
+import com.tustanovskyy.taxi.exception.VerificationCodeException;
 import com.tustanovskyy.taxi.repository.RideRepository;
 import com.tustanovskyy.taxi.repository.UserRepository;
 import com.tustanovskyy.taxi.service.RideService;
 import com.tustanovskyy.taxi.service.UserService;
+import com.twilio.Twilio;
+import com.twilio.rest.api.v2010.account.Message;
+import com.twilio.type.PhoneNumber;
+import lombok.extern.slf4j.Slf4j;
+import org.joda.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.Collection;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 
 @Service
+@Slf4j
 public class UserServiceImpl implements UserService {
 
     @Value("${google.map.api.key}")
@@ -99,5 +109,60 @@ public class UserServiceImpl implements UserService {
     @Override
     public User findUserByFacebookId(String facebookId) {
         return userRepository.findByFacebookId(facebookId);
+    }
+
+    @Override
+    public void sendVerificationCode(String phoneNumber) {
+        String code = getRandomNumberString();
+        User user = userRepository.findByPhoneNumber(phoneNumber);
+        Timestamp now = new Timestamp(LocalDateTime.now().toDate().getTime());
+        if (user == null) {
+            User newUser = new User();
+            newUser.setVerificationCode(code);
+            newUser.setPhoneNumber(phoneNumber);
+            newUser.setVerificationCodeDate(now);
+            newUser.setCreatedDate(now);
+            userRepository.save(newUser);
+        } else {
+            user.setVerificationCodeDate(now);
+            user.setVerificationCode(code);
+            userRepository.save(user);
+        }
+        sendSms(phoneNumber, code);
+    }
+
+    @Override
+    public void validateCode(String code, String phoneNumber) {
+        User user = userRepository.findByPhoneNumber(phoneNumber);
+        if (user == null) {
+            throw new VerificationCodeException("user by phone number not found");
+        }
+        if (user.getVerificationCodeDate() == null || LocalDateTime.now().minusMinutes(10).toDate().getTime() > user.getVerificationCodeDate().getTime()) {
+            throw new VerificationCodeException("please request new sms verification code");
+        }
+        if (!user.getVerificationCode().equals(code)) {
+            throw new VerificationCodeException("validation code not correct");
+        }
+    }
+
+    private void sendSms(String phoneNumber, String code) {
+        Twilio.init("AC3a95b14e95eca5575e7561f77048dd28", "d1191a500e04e6d761dc0acb50221503");
+        Message message = Message.creator(
+                        new PhoneNumber(phoneNumber), // to
+                        new PhoneNumber("+19285775178"),
+                        "Your taxi app verification code: " + code)
+                .create();
+        log.info("message: " + message.getBody() + " " + message.getSid());
+    }
+
+
+    public static String getRandomNumberString() {
+        // It will generate 6 digit random Number.
+        // from 0 to 999999
+        Random rnd = new Random();
+        int number = rnd.nextInt(999999);
+
+        // this will convert any number sequence into 6 character.
+        return String.format("%06d", number);
     }
 }
