@@ -4,9 +4,9 @@ WORKDIR /home/gradle/source
 RUN ./gradlew build -x test
 
 FROM openjdk:11-jre-slim
-COPY --from=gradleimage /home/gradle/source/build/libs/taxi-0.0.1-SNAPSHOT.jar /app/
-WORKDIR /app
-ENTRYPOINT ["java", "-jar", "taxi-0.0.1-SNAPSHOT.jar"]
+COPY --from=gradleimage /home/gradle/source/build/libs/*.jar app.jar
+WORKDIR /opt/app
+ENTRYPOINT ["java", "-jar", "/opt/app/app.jar"]
 
 #FROM openjdk:11.0.7-jdk
 #ARG JAR_FILE=build/libs/taxi-0.0.1-SNAPSHOT.jar
