@@ -10,10 +10,8 @@ import com.google.gson.GsonBuilder;
 import com.google.maps.GeoApiContext;
 import com.google.maps.GeocodingApi;
 import com.google.maps.model.GeocodingResult;
-import com.tustanovskyy.taxi.document.Ride;
 import com.tustanovskyy.taxi.document.User;
 import com.tustanovskyy.taxi.exception.VerificationCodeException;
-import com.tustanovskyy.taxi.repository.RideRepository;
 import com.tustanovskyy.taxi.repository.UserRepository;
 import com.tustanovskyy.taxi.service.RideService;
 import com.tustanovskyy.taxi.service.UserService;
@@ -25,14 +23,9 @@ import org.joda.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.HttpClientErrorException;
 
-import java.sql.Time;
 import java.sql.Timestamp;
-import java.util.Collection;
 import java.util.Random;
-import java.util.stream.Collectors;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.of;

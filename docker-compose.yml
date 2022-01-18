@@ -1,0 +1,41 @@
+version: '3'
+
+volumes:
+  database_data:
+    driver: local
+  mongodb:
+    driver: local
+
+services:
+  db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=test
+    volumes:
+      - database_data:/var/lib/postgresql/data
+  mongo:
+    image: mongo:latest
+    container_name: "mongodb"
+    ports:
+      - '27017:27017'
+    volumes:
+      - 'mongodb:/data/db'
+  taxi:
+    build: .
+    expose:
+      - 8080
+    ports:
+      - 8080:8080
+    volumes:
+      - ./api:/usr/src/app/
+    links:
+      - db
+      - mongo
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/test
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - MONGO_URL=mongodb://mongo:27017/test
