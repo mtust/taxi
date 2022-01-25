@@ -7,9 +7,11 @@ spring:
         accessToken: EAAHFm5jGwK0BABBgxxPtRgO0hqFzSDCR4KKgkrgTcYLmqTLy7JZCnmJDpZB5163HPYZA7QrZAHXJBbMHFuDAtEkyol2I7fKXbfp3UgBxgKbqtznZADwZBZCZB8ZCqoMSaznbDbi63bAoW9QCkvvbkwKupimnS16Upx9BjMxwrUrAuwQZDZD
   data:
     mongodb:
-      host: 127.0.0.1
-      port: 27017
-      dbname: taxi
+#      host: mongo
+      uri: mongodb+srv://mtust:admin@cluster0.ilb0w.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
+#      host: 127.0.0.1
+#      port: 27017
+#      dbname: taxi
     rest:
       detection-strategy: annotated
       return-body-on-create: true
@@ -19,9 +21,13 @@ spring:
       write_dates_as_timestamps: false
   datasource:
     driverClassName: org.postgresql.Driver
-    url: jdbc:postgresql://db:5432/test
+#    url: jdbc:postgresql://db:5432/test
+#    url: jdbc:postgresql://localhost:5432/test
+#    username: postgres
+#    password: rootgresql://localhost:5432/test
+    url: jdbc:postgresql://35.238.112.31:5432/test
     username: postgres
-    password: root
+    password: admin
 
   jpa:
     show-sql: true
