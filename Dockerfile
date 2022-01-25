@@ -4,6 +4,8 @@ WORKDIR /home/gradle/source
 RUN ./gradlew build -x test
 
 FROM openjdk:11-jre-slim
+
+EXPOSE 8080
 COPY --from=gradleimage /home/gradle/source/build/libs/*.jar app.jar
 WORKDIR /opt/app
 ENTRYPOINT ["java", "-jar", "/opt/app/app.jar"]
