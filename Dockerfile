@@ -8,6 +8,9 @@ FROM openjdk:11-jre-slim
 EXPOSE 8080
 COPY --from=gradleimage /home/gradle/source/build/libs/*.jar app.jar
 WORKDIR /opt/app
+
+ENV PORT 8080
+ENV HOST 0.0.0.0
 ENTRYPOINT ["java", "-jar", "/opt/app/app.jar"]
 
 #FROM openjdk:11.0.7-jdk
