@@ -6,12 +6,17 @@ RUN ./gradlew build -x test
 FROM openjdk:11-jre-slim
 
 EXPOSE 8080
-COPY --from=gradleimage /home/gradle/source/build/libs/*.jar app.jar
-WORKDIR /opt/app
+#COPY --from=gradleimage /home/gradle/source/build/libs/*.jar app.jar
+#WORKDIR /opt/app
+#
+#ENV PORT 8080
+#ENV HOST 0.0.0.0
+#ENTRYPOINT ["java", "-jar", "/opt/app/app.jar"]
 
-ENV PORT 8080
-ENV HOST 0.0.0.0
-ENTRYPOINT ["java", "-jar", "/opt/app/app.jar"]
+COPY --from=gradleimage /home/gradle/source/build/libs/* /app.jar
+
+# Run the web service on container startup.
+CMD ["java", "-jar", "/app.jar"]
 
 #FROM openjdk:11.0.7-jdk
 #ARG JAR_FILE=build/libs/taxi-0.0.1-SNAPSHOT.jar
