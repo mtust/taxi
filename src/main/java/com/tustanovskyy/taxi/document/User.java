@@ -14,26 +14,26 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    private Long id;
     @Column
-    String facebookId;
+    private String facebookId;
     @Column
-    String name;
+    private String name;
     @Column
-    String surname;
+    private String surname;
     @Column
     String email;
     @Column
-    String phoneNumber;
+    private String phoneNumber;
     @Column
-    String verificationCode;
+    private String verificationCode;
     @Column
     @CreatedDate
-    Timestamp createdDate;
+    private Timestamp createdDate;
     @Column
-    Timestamp verificationCodeDate;
+    private Timestamp verificationCodeDate;
     @Column
-    boolean registrationCompleted;
+    private boolean registrationCompleted;
 //    @Column
 //    GridFSFile photo;
 

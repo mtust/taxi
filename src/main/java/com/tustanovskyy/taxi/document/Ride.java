@@ -17,15 +17,15 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class Ride {
     @Id
-    String id;
+    private String id;
 
     @CreatedDate
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm")
-    LocalDateTime date;
+    private LocalDateTime date;
 
-    Place placeFrom;
-    Place placeTo;
-    Boolean isActive;
-    Long userId;
+    private Place placeFrom;
+    private Place placeTo;
+    private Boolean isActive;
+    private Long userId;
 
 }

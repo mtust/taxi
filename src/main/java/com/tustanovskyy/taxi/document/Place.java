@@ -13,9 +13,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @AllArgsConstructor
 public class Place {
 
-    Point point;
-    String name;
-    Integer distance;
+    private Point point;
+    private String name;
+    private Integer distance;
 
 
 }
