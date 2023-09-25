@@ -27,7 +27,8 @@ spring:
 #    password: rootgresql://localhost:5432/test
 #    url: jdbc:postgresql://35.238.112.31:5432/test
     username: postgres
-    password: admin
+    password: root
+ #   password: admin
 
   jpa:
     show-sql: true
