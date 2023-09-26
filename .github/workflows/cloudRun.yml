@@ -39,8 +39,13 @@ jobs:
       - name: Deploy
         run: |
           gcloud run deploy helloworld \
+          --vpc-connector="quickstart-connector" --vpc-egress=all-traffic \
+          --set-env-vars DB_NAME="quickstart-db" \
+          --set-env-vars DB_USER="postgresql" \
+          --set-env-vars DB_PASS="admin" \
+          --set-env-vars DB_PORT="5432"\
           --region europe-west1 \
           --image gcr.io/$PROJECT_ID/$IMAGE_NAME \
           --platform managed \
           --allow-unauthenticated \
-          --project $PROJECT_ID
+          --project $PROJECT_ID 
