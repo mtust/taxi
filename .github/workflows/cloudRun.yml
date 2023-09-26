@@ -44,7 +44,7 @@ jobs:
           --set-env-vars DB_USER="postgresql" \
           --set-env-vars DB_PASS="admin" \
           --set-env-vars DB_PORT="5432"\
-          --region europe-west1 \
+          --region us-central1 \
           --image gcr.io/$PROJECT_ID/$IMAGE_NAME \
           --platform managed \
           --allow-unauthenticated \
