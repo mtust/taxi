@@ -41,6 +41,7 @@ jobs:
           gcloud run deploy helloworld \
           --region us-central1 \
           --image gcr.io/$PROJECT_ID/$IMAGE_NAME \
+          --add-cloudsql-instances="taxiproject-209815:us-central1:taxiproject" \
           --set-env-vars DB_NAME="quickstart-db" \
           --set-env-vars DB_USER="postgresql" \
           --set-env-vars DB_PASS="admin" \
