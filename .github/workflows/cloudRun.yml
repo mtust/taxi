@@ -13,7 +13,7 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@master
 
       - name: Setup GCP Service Account
         uses: google-github-actions/setup-gcloud@v0
@@ -39,8 +39,13 @@ jobs:
       - name: Deploy
         run: |
           gcloud run deploy helloworld \
-          --region europe-west1 \
+          --region us-central1 \
           --image gcr.io/$PROJECT_ID/$IMAGE_NAME \
+          --add-cloudsql-instances="taxiproject-209815:us-central1:taxiproject" \
+          --set-env-vars DB_NAME="quickstart-db" \
+          --set-env-vars DB_USER="postgresql" \
+          --set-env-vars DB_PASS="admin" \
+          --set-env-vars DB_PORT="5432"\ 
           --platform managed \
           --allow-unauthenticated \
-          --project $PROJECT_ID
+          --project $PROJECT_ID 
