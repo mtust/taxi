@@ -1,7 +1,7 @@
 FROM gradle:jdk11 as gradleimage
 COPY . /home/gradle/source
 WORKDIR /home/gradle/source
-RUN ./gradlew build -x test
+RUN ./gradlew build -x test --image gcr.io/taxiproject-209815/run-sql
 
 FROM openjdk:11-jre-slim
 
