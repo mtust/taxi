@@ -38,7 +38,7 @@ jobs:
 
       - name: Deploy
         run: |
-          gcloud run deploy helloworld \
+          gcloud run deploy taxiRun \
           --region us-central1 \
           --image gcr.io/$PROJECT_ID/$IMAGE_NAME \
           --platform managed \
