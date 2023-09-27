@@ -1,40 +1,43 @@
 package com.tustanovskyy.taxi.document;
 
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
 
-@Entity
-@Table(name = "users")
+@Document
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column
     private String facebookId;
-    @Column
+    
     private String name;
-    @Column
+    
     private String surname;
-    @Column
-    String email;
-    @Column
+    
+    private String email;
+    
     private String phoneNumber;
-    @Column
+    
     private String verificationCode;
-    @Column
+    
     @CreatedDate
     private Timestamp createdDate;
-    @Column
+    
     private Timestamp verificationCodeDate;
-    @Column
+    
     private boolean registrationCompleted;
-//    @Column
+//    
 //    GridFSFile photo;
 
 

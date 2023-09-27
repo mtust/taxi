@@ -40,7 +40,7 @@ dependencies {
 	testImplementation('org.springframework.restdocs:spring-restdocs-mockmvc')
 	testImplementation('org.springframework.security:spring-security-test')
 	implementation group: 'com.github.messenger4j', name: 'messenger4j', version: '1.0.0-M2'
-	implementation('org.postgresql:postgresql:42.3.6')
+//	implementation('org.postgresql:postgresql:42.3.6')
 	implementation 'joda-time:joda-time:2.10.14'
 	implementation group: "com.twilio.sdk", name: "twilio", version: "8.24.0"
 }

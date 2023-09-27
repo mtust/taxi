@@ -19,24 +19,24 @@ spring:
   jackson:
     serialization:
       write_dates_as_timestamps: false
-  datasource:
-    driverClassName: org.postgresql.Driver
+#  datasource:
+#    driverClassName: org.postgresql.Driver
 #    url: jdbc:postgresql://db:5432/test
 #    url: jdbc:postgresql://localhost:5432/test
 #    username: postgres
 #    password: rootgresql://localhost:5432/test
-    url: jdbc:postgresql://34.42.250.102:5432/test
-    username: postgres
-    password: admin
+#    url: jdbc:postgresql://34.42.250.102:5432/test
+#    username: postgres
+#    password: admin
 
-  jpa:
-    show-sql: true
-    hibernate:
-      ddl-auto: update
-      naming-strategy: org.hibernate.cfg.ImprovedNamingStrategy
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+#  jpa:
+#    show-sql: true
+#    hibernate:
+#      ddl-auto: update
+#      naming-strategy: org.hibernate.cfg.ImprovedNamingStrategy
+#    properties:
+#      hibernate:
+#        dialect: org.hibernate.dialect.PostgreSQLDialect
 
   security:
     oauth2:
