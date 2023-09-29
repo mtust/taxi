@@ -17,7 +17,7 @@ import java.sql.Timestamp;
 public class User {
 
     @Id
-    private Long id;
+    private String id;
     private String facebookId;
     
     private String name;
