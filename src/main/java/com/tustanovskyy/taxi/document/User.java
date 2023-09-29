@@ -8,7 +8,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Document
 @Data
@@ -31,9 +31,9 @@ public class User {
     private String verificationCode;
     
     @CreatedDate
-    private Timestamp createdDate;
+    private LocalDateTime createdDate;
     
-    private Timestamp verificationCodeDate;
+    private LocalDateTime verificationCodeDate;
     
     private boolean registrationCompleted;
 //    

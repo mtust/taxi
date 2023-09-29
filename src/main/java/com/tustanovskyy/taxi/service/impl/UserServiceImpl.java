@@ -19,12 +19,11 @@ import com.twilio.Twilio;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
 import lombok.extern.slf4j.Slf4j;
-import org.joda.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.Random;
 
 import static java.util.Optional.empty;
@@ -108,7 +107,7 @@ public class UserServiceImpl implements UserService {
     public void sendVerificationCode(String phoneNumber) {
         String code = getRandomNumberString();
         User user = userRepository.findByPhoneNumber(phoneNumber);
-        Timestamp now = new Timestamp(LocalDateTime.now().toDate().getTime());
+        LocalDateTime now = LocalDateTime.now();
         if (user == null) {
             User newUser = new User();
             newUser.setVerificationCode(code);
@@ -130,7 +129,7 @@ public class UserServiceImpl implements UserService {
         if (user == null) {
             throw new VerificationCodeException("user by phone number not found");
         }
-        if (user.getVerificationCodeDate() == null || LocalDateTime.now().minusMinutes(10).toDate().getTime() > user.getVerificationCodeDate().getTime()) {
+        if (user.getVerificationCodeDate() == null || LocalDateTime.now().minusMinutes(10).isBefore(user.getVerificationCodeDate())) {
             throw new VerificationCodeException("please request new sms verification code");
         }
         if (!user.getVerificationCode().equals(code)) {
