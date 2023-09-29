@@ -1,6 +1,7 @@
 package com.tustanovskyy.taxi.resources;
 
 import com.tustanovskyy.taxi.document.Ride;
+import com.tustanovskyy.taxi.dto.RideDto;
 import com.tustanovskyy.taxi.service.RideService;
 import com.tustanovskyy.taxi.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -22,24 +23,24 @@ public class RideResource {
     UserService userService;
 
     @PostMapping
-    public Ride createRide(@RequestBody Ride ride) {
+    public RideDto createRide(@RequestBody RideDto ride) {
         return rideService.createRide(ride);
     }
 
     @GetMapping("{id}")
-    public Ride ride(@PathVariable String id) {
+    public RideDto ride(@PathVariable String id) {
         log.info("id: " + id);
         return rideService.findRide(id);
     }
 
-//    @GetMapping
-//    public Collection<Ride> findPartners(@RequestParam("rideId") String id) {
-//        log.info("id: " + id);
-//        return rideService.findPartnersRide(id);
-//    }
+    @GetMapping("/partner/{id}")
+    public Collection<RideDto> findPartners(@PathVariable String id) {
+        log.info("id: " + id);
+        return rideService.findPartnersRide(id);
+    }
 
     @GetMapping
-    public Collection<Ride> rides() {
+    public Collection<RideDto> rides() {
         return rideService.getRides();
     }
 

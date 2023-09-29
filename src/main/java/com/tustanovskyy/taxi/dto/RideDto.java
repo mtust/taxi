@@ -1,33 +1,26 @@
-package com.tustanovskyy.taxi.document;
-
+package com.tustanovskyy.taxi.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.tustanovskyy.taxi.document.Place;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 
-@Document
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class Ride {
+public class RideDto {
     @Id
     private String id;
 
-    @CreatedDate
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm")
     private LocalDateTime date;
 
-    private Place placeFrom;
-    private Place placeTo;
+    private PlaceDto placeFrom;
+    private PlaceDto placeTo;
     private Boolean isActive;
     private Long userId;
-
 }

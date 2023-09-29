@@ -7,6 +7,7 @@ spring:
         accessToken: EAAHFm5jGwK0BABBgxxPtRgO0hqFzSDCR4KKgkrgTcYLmqTLy7JZCnmJDpZB5163HPYZA7QrZAHXJBbMHFuDAtEkyol2I7fKXbfp3UgBxgKbqtznZADwZBZCZB8ZCqoMSaznbDbi63bAoW9QCkvvbkwKupimnS16Upx9BjMxwrUrAuwQZDZD
   data:
     mongodb:
+      auto-index-creation: true
 #      host: mongo
       uri: mongodb+srv://mtust:admin@cluster0.ilb0w.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
 #      host: 127.0.0.1
