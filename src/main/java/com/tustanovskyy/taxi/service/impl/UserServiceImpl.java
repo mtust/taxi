@@ -11,17 +11,18 @@ import com.google.maps.GeoApiContext;
 import com.google.maps.GeocodingApi;
 import com.google.maps.model.GeocodingResult;
 import com.tustanovskyy.taxi.document.User;
+import com.tustanovskyy.taxi.exception.ValidationException;
 import com.tustanovskyy.taxi.exception.VerificationCodeException;
 import com.tustanovskyy.taxi.repository.UserRepository;
 import com.tustanovskyy.taxi.service.RideService;
+import com.tustanovskyy.taxi.service.SmsService;
 import com.tustanovskyy.taxi.service.UserService;
-import com.twilio.Twilio;
-import com.twilio.rest.api.v2010.account.Message;
-import com.twilio.type.PhoneNumber;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.Random;
@@ -35,14 +36,14 @@ public class UserServiceImpl implements UserService {
 
     @Value("${google.map.api.key}")
     private String googleMapApiKey;
-
     @Autowired
-    UserRepository userRepository;
-
+    private UserRepository userRepository;
     @Autowired
-    RideService rideService;
+    private RideService rideService;
+    @Autowired
+    private SmsService smsService;
 
-    Messenger messenger;
+    private Messenger messenger;
 
     @Override
     public void createRideFromFacebook(String userFacebookId, String text) throws Exception {
@@ -85,12 +86,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User createUser(User user) {
-        User loadedUser = findUserByFacebookId(user.getFacebookId());
-        if (loadedUser == null) {
-            return userRepository.save(user);
-        } else {
-            return loadedUser;
-        }
+//        User loadedUser = findUserByFacebookId(user.getFacebookId());
+//        if (loadedUser == null) {
+        validateUser(user);
+        var created = userRepository.save(user);
+        sendVerificationCode(created.getPhoneNumber());
+        return created;
     }
 
     @Override
@@ -105,22 +106,21 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void sendVerificationCode(String phoneNumber) {
-        String code = getRandomNumberString();
         User user = userRepository.findByPhoneNumber(phoneNumber);
-        LocalDateTime now = LocalDateTime.now();
         if (user == null) {
-            User newUser = new User();
-            newUser.setVerificationCode(code);
-            newUser.setPhoneNumber(phoneNumber);
-            newUser.setVerificationCodeDate(now);
-            newUser.setCreatedDate(now);
-            userRepository.save(newUser);
-        } else {
-            user.setVerificationCodeDate(now);
-            user.setVerificationCode(code);
-            userRepository.save(user);
+            throw new ValidationException("user not found");
         }
-        sendSms(phoneNumber, code);
+        sendVerificationCode(user);
+    }
+
+    private void sendVerificationCode(User user) {
+        String code = getRandomNumberString();
+        var phoneNumber = user.getPhoneNumber();
+        LocalDateTime now = LocalDateTime.now();
+        user.setVerificationCodeDate(now);
+        user.setVerificationCode(code);
+        userRepository.save(user);
+        smsService.sendSms(phoneNumber, code);
     }
 
     @Override
@@ -137,18 +137,17 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private void sendSms(String phoneNumber, String code) {
-        Twilio.init("AC3a95b14e95eca5575e7561f77048dd28", "d1191a500e04e6d761dc0acb50221503");
-        Message message = Message.creator(
-                        new PhoneNumber(phoneNumber), // to
-                        new PhoneNumber("+19285775178"),
-                        "Your taxi app verification code: " + code)
-                .create();
-        log.info("message: " + message.getBody() + " " + message.getSid());
+    private void validateUser(User user) {
+        if (StringUtils.isEmpty(user.getPhoneNumber())) {
+            throw new ValidationException("phone number is empty");
+        }
+        User existed = userRepository.findByPhoneNumber(user.getPhoneNumber());
+        if (existed != null && existed.isRegistrationCompleted()) {
+            throw new ValidationException("user with this phone number already registered");
+        }
     }
 
-
-    public static String getRandomNumberString() {
+    private static String getRandomNumberString() {
         // It will generate 6 digit random Number.
         // from 0 to 999999
         Random rnd = new Random();

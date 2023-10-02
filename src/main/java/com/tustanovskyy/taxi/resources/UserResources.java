@@ -39,11 +39,6 @@ public class UserResources {
         return userService.findUser(userId);
     }
 
-    @GetMapping("facebook/{facebookId}")
-    public User findUserByFacebookId(@PathVariable String facebookId) {
-        return userService.findUserByFacebookId(facebookId);
-    }
-
     @PostMapping("verify/phone")
     public void verifyPhone(@RequestBody Map<String, String> phoneNumber) {
         if (phoneNumber != null) {

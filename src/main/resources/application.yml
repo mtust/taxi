@@ -59,6 +59,11 @@ spring:
 messenger4j:
   verifyToken: token
 
+twilio:
+  accountSid: AC3a95b14e95eca5575e7561f77048dd28
+  authToken: c6c342b0c56958581c8e35200acc20e4
+  serviceId: MG3e36836ec02e7b7d6cc7daf5e12e0d81
+
 google:
   map:
     api:

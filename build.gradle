@@ -40,7 +40,7 @@ dependencies {
 	testImplementation('org.springframework.security:spring-security-test')
 	implementation group: 'com.github.messenger4j', name: 'messenger4j', version: '1.0.0-M2'
 	implementation 'joda-time:joda-time:2.10.14'
-	implementation group: "com.twilio.sdk", name: "twilio", version: "8.24.0"
+	implementation group: "com.twilio.sdk", name: "twilio", version: "9.2.5"
 	annotationProcessor 'org.projectlombok:lombok:1.18.24'
 	annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
 }
