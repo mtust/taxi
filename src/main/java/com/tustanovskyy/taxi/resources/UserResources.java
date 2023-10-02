@@ -1,6 +1,7 @@
 package com.tustanovskyy.taxi.resources;
 
 import com.tustanovskyy.taxi.document.User;
+import com.tustanovskyy.taxi.dto.UserDto;
 import com.tustanovskyy.taxi.exception.VerificationCodeException;
 import com.tustanovskyy.taxi.service.RideService;
 import com.tustanovskyy.taxi.service.UserService;
@@ -23,14 +24,14 @@ import java.util.Map;
 @Slf4j
 public class UserResources {
 
-    @Autowired
-    UserService userService;
 
-    @Autowired
-    RideService rideService;
+    private final UserService userService;
+    public UserResources(UserService userService) {
+        this.userService = userService;
+    }
 
     @PostMapping
-    public User createUser(@RequestBody User user) {
+    public User createUser(@RequestBody UserDto user) {
         return userService.createUser(user);
     }
 
@@ -54,10 +55,5 @@ public class UserResources {
             throw new VerificationCodeException("code not exist");
         }
     }
-
-//    @GetMapping
-//    public Collection<User> findPartner(@RequestParam String userId) {
-//        return userService.findPartners(userId);
-//    }
 
 }

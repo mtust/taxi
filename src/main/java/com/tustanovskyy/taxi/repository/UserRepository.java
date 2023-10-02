@@ -9,9 +9,6 @@ import org.springframework.stereotype.Repository;
 //public interface UserRepository extends CrudRepository<User, String> {
 public interface UserRepository extends MongoRepository<User, Long> {
 
-
-    User findByFacebookId(String facebookId);
-
     User findByPhoneNumber(String phoneNumber);
 
 }

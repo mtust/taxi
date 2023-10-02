@@ -16,11 +16,10 @@ import java.util.Collection;
 @Slf4j
 public class RideResource {
 
-    @Autowired
-    RideService rideService;
-
-    @Autowired
-    UserService userService;
+    private final RideService rideService;
+    public RideResource(RideService rideService) {
+        this.rideService = rideService;
+    }
 
     @PostMapping
     public RideDto createRide(@RequestBody RideDto ride) {
