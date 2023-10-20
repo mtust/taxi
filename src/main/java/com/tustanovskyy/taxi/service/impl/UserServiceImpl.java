@@ -80,7 +80,7 @@ public class UserServiceImpl implements UserService {
                         .surname(user.getSurname())
                         .phoneNumber(user.getPhoneNumber())
                 .build());
-        sendVerificationCode(created.getPhoneNumber());
+        sendVerificationCode(created);
         return created;
     }
 
