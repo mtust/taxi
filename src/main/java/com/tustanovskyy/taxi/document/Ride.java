@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -28,6 +29,6 @@ public class Ride {
     private Place placeFrom;
     private Place placeTo;
     private Boolean isActive;
-    private Long userId;
+    private ObjectId userId;
 
 }
