@@ -1,15 +1,6 @@
 package com.tustanovskyy.taxi.service.impl;
 
 import com.github.messenger4j.Messenger;
-import com.github.messenger4j.send.MessagePayload;
-import com.github.messenger4j.send.NotificationType;
-import com.github.messenger4j.send.message.TextMessage;
-import com.github.messenger4j.send.recipient.IdRecipient;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.maps.GeoApiContext;
-import com.google.maps.GeocodingApi;
-import com.google.maps.model.GeocodingResult;
 import com.tustanovskyy.taxi.document.User;
 import com.tustanovskyy.taxi.dto.UserDto;
 import com.tustanovskyy.taxi.exception.ValidationException;
@@ -19,16 +10,13 @@ import com.tustanovskyy.taxi.service.RideService;
 import com.tustanovskyy.taxi.service.SmsService;
 import com.tustanovskyy.taxi.service.UserService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.Random;
-
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
 
 @Service
 @Slf4j
@@ -75,27 +63,26 @@ public class UserServiceImpl implements UserService {
     public User createUser(UserDto user) {
         validateUser(user);
         var created = userRepository.save(User.builder()
-                        .email(user.getEmail())
-                        .name(user.getName())
-                        .surname(user.getSurname())
-                        .phoneNumber(user.getPhoneNumber())
+                .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .phoneNumber(user.getPhoneNumber())
                 .build());
         sendVerificationCode(created);
         return created;
     }
 
     @Override
-    public User findUser(Long userId) {
-        return userRepository.findById(userId).get();
+    public User findUser(String userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ValidationException("user not found"));
     }
 
     @Override
     public void sendVerificationCode(String phoneNumber) {
-        User user = userRepository.findByPhoneNumber(phoneNumber);
-        if (user == null) {
-            throw new ValidationException("user not found");
-        }
-        sendVerificationCode(user);
+        sendVerificationCode(userRepository
+                .findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new ValidationException("user not found")));
     }
 
     private void sendVerificationCode(User user) {
@@ -110,15 +97,17 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void validateCode(String code, String phoneNumber) {
-        User user = userRepository.findByPhoneNumber(phoneNumber);
-        if (user == null) {
-            throw new VerificationCodeException("user by phone number not found");
-        }
+        User user = userRepository.findByPhoneNumber(phoneNumber).orElseThrow(() ->
+                new VerificationCodeException("user by phone number not found"));
         if (user.getVerificationCodeDate() == null || LocalDateTime.now().minusMinutes(10).isBefore(user.getVerificationCodeDate())) {
             throw new VerificationCodeException("please request new sms verification code");
         }
         if (!user.getVerificationCode().equals(code)) {
             throw new VerificationCodeException("validation code not correct");
+        }
+        if (!user.isRegistrationCompleted()) {
+            user.setRegistrationCompleted(true);
+            userRepository.save(user);
         }
     }
 
@@ -126,10 +115,10 @@ public class UserServiceImpl implements UserService {
         if (StringUtils.isEmpty(user.getPhoneNumber())) {
             throw new ValidationException("phone number is empty");
         }
-        User existed = userRepository.findByPhoneNumber(user.getPhoneNumber());
-        if (existed != null && existed.isRegistrationCompleted()) {
-            throw new ValidationException("user with this phone number already registered");
-        }
+        userRepository.findByPhoneNumber(user.getPhoneNumber())
+                .ifPresent(u -> {
+                    throw new ValidationException("user with phoneNumber already exist");
+                });
     }
 
     private static String getRandomNumberString() {

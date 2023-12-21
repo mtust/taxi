@@ -1,6 +1,7 @@
 package com.tustanovskyy.taxi.document;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,24 +21,25 @@ public class User {
 
     @Id
     private String id;
-    
-    private String name;
-    
-    private String surname;
-    
+
+    private String firstName;
+
+    private String lastName;
+
     private String email;
-    
+
     private String phoneNumber;
-    
+    @JsonIgnore
     private String verificationCode;
-    
+
     @CreatedDate
     private LocalDateTime createdDate;
-    
+
+    @JsonIgnore
     private LocalDateTime verificationCodeDate;
-    
+
     private boolean registrationCompleted;
-//    
+//
 //    GridFSFile photo;
 
 

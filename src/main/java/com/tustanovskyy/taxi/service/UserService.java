@@ -7,7 +7,7 @@ public interface UserService {
 
     User createUser(UserDto user);
 
-    User findUser(Long userId);
+    User findUser(String userId);
 
     void sendVerificationCode(String phoneNumber);
 
