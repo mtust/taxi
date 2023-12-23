@@ -96,7 +96,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void validateCode(String code, String phoneNumber) {
+    public User validateCode(String code, String phoneNumber) {
         User user = userRepository.findByPhoneNumber(phoneNumber).orElseThrow(() ->
                 new VerificationCodeException("user by phone number not found"));
         if (user.getVerificationCodeDate() == null || LocalDateTime.now().minusMinutes(10).isBefore(user.getVerificationCodeDate())) {
@@ -107,8 +107,9 @@ public class UserServiceImpl implements UserService {
         }
         if (!user.isRegistrationCompleted()) {
             user.setRegistrationCompleted(true);
-            userRepository.save(user);
+            user = userRepository.save(user);
         }
+        return user;
     }
 
     private void validateUser(UserDto user) {

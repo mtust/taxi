@@ -11,5 +11,5 @@ public interface UserService {
 
     void sendVerificationCode(String phoneNumber);
 
-    void validateCode(String code, String phoneNumber);
+    User validateCode(String code, String phoneNumber);
 }

@@ -44,8 +44,8 @@ public class UserResources {
     }
 
     @PostMapping("verify")
-    public void verifyCode(@RequestBody CodeDto codeDto) {
-        userService.validateCode(codeDto.getCode(), codeDto.getPhoneNumber());
+    public User verifyCode(@RequestBody CodeDto codeDto) {
+        return userService.validateCode(codeDto.getCode(), codeDto.getPhoneNumber());
     }
 
 }
