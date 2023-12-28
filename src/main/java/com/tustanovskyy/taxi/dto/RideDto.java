@@ -23,5 +23,5 @@ public class RideDto {
     private PlaceDto placeFrom;
     private PlaceDto placeTo;
     private Boolean isActive;
-    private ObjectId userId;
+    private String userId;
 }

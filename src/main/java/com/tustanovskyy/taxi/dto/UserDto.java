@@ -11,6 +11,7 @@ import javax.validation.constraints.Email;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserDto {
+    private String id;
     private String firstName;
     private String lastName;
     @Email

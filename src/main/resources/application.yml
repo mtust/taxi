@@ -61,7 +61,7 @@ messenger4j:
 
 twilio:
   accountSid: AC3a95b14e95eca5575e7561f77048dd28
-  authToken: 8ef86b8f685251d4a252c57e8ebbe955
+  authToken: 6ca5374995f83639f269118d43299ade
   serviceId: MG3e36836ec02e7b7d6cc7daf5e12e0d81
 
 google:

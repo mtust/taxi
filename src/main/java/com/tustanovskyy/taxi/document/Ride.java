@@ -29,6 +29,6 @@ public class Ride {
     private Place placeFrom;
     private Place placeTo;
     private Boolean isActive;
-    private ObjectId userId;
+    private String userId;
 
 }

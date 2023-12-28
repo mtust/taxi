@@ -21,7 +21,7 @@ import java.time.LocalDateTime;
 public class User {
 
     @Id
-    private ObjectId id;
+    private String id;
 
     private String firstName;
 
