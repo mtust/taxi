@@ -99,7 +99,7 @@ public class UserServiceImpl implements UserService {
     public User validateCode(String code, String phoneNumber) {
         User user = userRepository.findByPhoneNumber(phoneNumber).orElseThrow(() ->
                 new VerificationCodeException("user by phone number not found"));
-        if (user.getVerificationCodeDate() == null || LocalDateTime.now().minusMinutes(10).isBefore(user.getVerificationCodeDate())) {
+        if (user.getVerificationCodeDate() == null || LocalDateTime.now().minusMinutes(10).isAfter(user.getVerificationCodeDate())) {
             throw new VerificationCodeException("please request new sms verification code");
         }
         if (!user.getVerificationCode().equals(code)) {
