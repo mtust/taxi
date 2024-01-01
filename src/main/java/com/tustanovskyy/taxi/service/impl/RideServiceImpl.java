@@ -1,7 +1,9 @@
 package com.tustanovskyy.taxi.service.impl;
 
 import com.tustanovskyy.taxi.document.Ride;
+import com.tustanovskyy.taxi.document.User;
 import com.tustanovskyy.taxi.dto.RideDto;
+import com.tustanovskyy.taxi.exception.ValidationException;
 import com.tustanovskyy.taxi.mapper.RideMapper;
 import com.tustanovskyy.taxi.repository.RideRepository;
 import com.tustanovskyy.taxi.repository.UserRepository;
@@ -16,8 +18,10 @@ import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.swing.text.html.Option;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -46,7 +50,7 @@ public class RideServiceImpl implements RideService {
                 new Distance((double) currentRide.getPlaceFrom().getDistance() / 1000, Metrics.KILOMETERS));
         log.info("ridesFrom: " + ridesFrom);
         List<Ride> ridesTo = rideRepository.findByPlaceToCoordinatesNear(
-                new GeoJsonPoint(currentRide.getPlaceTo().getCoordinates().getX(), currentRide.getPlaceFrom().getCoordinates().getY()),
+                new GeoJsonPoint(currentRide.getPlaceTo().getCoordinates().getX(), currentRide.getPlaceTo().getCoordinates().getY()),
                 new Distance((double) currentRide.getPlaceTo().getDistance() / 1000, Metrics.KILOMETERS));
         log.info("ridesTo: " + ridesTo);
         return rideMapper.ridesToRideDtos(ridesFrom
@@ -66,7 +70,11 @@ public class RideServiceImpl implements RideService {
     @Override
     @Transactional
     public RideDto findRide(String rideId) {
-        return rideMapper.rideToRideDto(rideRepository.findById(new ObjectId(rideId)).get());
+        return rideRepository.findById(new ObjectId(rideId))
+                .map(ride -> {
+                    Optional<User> user = ride.getUserId() == null ? Optional.empty() : userRepository.findById(ride.getUserId());
+                    return rideMapper.rideToRideDto(ride, user.orElse(null));
+                }).orElseThrow(() -> new ValidationException("ride " + rideId + " not found"));
     }
 
     @Override

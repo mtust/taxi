@@ -32,7 +32,7 @@ public class RideResource {
         return rideService.findRide(id);
     }
 
-    @GetMapping("/partner/{id}")
+    @GetMapping("/{id}/partners")
     public Collection<RideDto> findPartners(@PathVariable String id) {
         log.info("id: " + id);
         return rideService.findPartnersRide(id);
