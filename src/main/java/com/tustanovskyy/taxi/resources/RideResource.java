@@ -1,6 +1,7 @@
 package com.tustanovskyy.taxi.resources;
 
 import com.tustanovskyy.taxi.document.Ride;
+import com.tustanovskyy.taxi.dto.RideDetailsDto;
 import com.tustanovskyy.taxi.dto.RideDto;
 import com.tustanovskyy.taxi.service.RideService;
 import com.tustanovskyy.taxi.service.UserService;
@@ -27,7 +28,7 @@ public class RideResource {
     }
 
     @GetMapping("{id}")
-    public RideDto ride(@PathVariable String id) {
+    public RideDetailsDto ride(@PathVariable String id) {
         log.info("id: " + id);
         return rideService.findRide(id);
     }

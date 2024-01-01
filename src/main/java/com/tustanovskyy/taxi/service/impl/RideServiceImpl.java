@@ -2,6 +2,7 @@ package com.tustanovskyy.taxi.service.impl;
 
 import com.tustanovskyy.taxi.document.Ride;
 import com.tustanovskyy.taxi.document.User;
+import com.tustanovskyy.taxi.dto.RideDetailsDto;
 import com.tustanovskyy.taxi.dto.RideDto;
 import com.tustanovskyy.taxi.exception.ValidationException;
 import com.tustanovskyy.taxi.mapper.RideMapper;
@@ -69,11 +70,11 @@ public class RideServiceImpl implements RideService {
 
     @Override
     @Transactional
-    public RideDto findRide(String rideId) {
+    public RideDetailsDto findRide(String rideId) {
         return rideRepository.findById(new ObjectId(rideId))
                 .map(ride -> {
                     Optional<User> user = ride.getUserId() == null ? Optional.empty() : userRepository.findById(ride.getUserId());
-                    return rideMapper.rideToRideDto(ride, user.orElse(null));
+                    return rideMapper.rideToRideDetailsDto(ride, user.orElse(null));
                 }).orElseThrow(() -> new ValidationException("ride " + rideId + " not found"));
     }
 
