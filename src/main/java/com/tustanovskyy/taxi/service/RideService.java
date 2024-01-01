@@ -17,4 +17,6 @@ public interface RideService {
 
     RideDetailsDto findRide(String rideId);
     Collection<RideDto> findPartnersRide(Ride ride);
+
+    Collection<RideDto> findRidesByUserAndStatus(String userId, Boolean isActive);
 }

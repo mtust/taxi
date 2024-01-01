@@ -82,4 +82,10 @@ public class RideServiceImpl implements RideService {
     public Collection<RideDto> getRides() {
         return rideMapper.ridesToRideDtos(rideRepository.findAll());
     }
+
+    @Override
+    public Collection<RideDto> findRidesByUserAndStatus(String userId, Boolean isActive) {
+        return rideMapper.ridesToRideDtos(rideRepository
+                .findByUserIdAndIsActive(userId, isActive));
+    }
 }

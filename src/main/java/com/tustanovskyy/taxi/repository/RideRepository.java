@@ -10,11 +10,14 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 
 @Repository
 public interface RideRepository extends MongoRepository<Ride, ObjectId> {
     List<Ride> findByPlaceFromCoordinatesNear(GeoJsonPoint location, Distance distance);
     List<Ride> findByPlaceToCoordinatesNear(GeoJsonPoint location, Distance distance);
+    Collection<Ride> findByIdAndIsActive(String id, Boolean isActive);
+    Collection<Ride> findByUserIdAndIsActive(String userId, Boolean isActive);
 
 }

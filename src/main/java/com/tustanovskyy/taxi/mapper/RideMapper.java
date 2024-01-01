@@ -12,12 +12,13 @@ import org.mapstruct.NullValueCheckStrategy;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 
+import java.util.Collection;
 import java.util.List;
 
 @Mapper
 public interface RideMapper {
     Ride rideDtoToRide(RideDto rideDto);
-    List<Ride> rideDtosToRides(List<RideDto> rideDto);
+    Collection<Ride> rideDtosToRides(Collection<RideDto> rideDto);
     @Mapping(target = "coordinates", source = "point")
     Place placeDtoToPlace(PlaceDto placeDto);
     default GeoJsonPoint pointToCoordinates(Point point) {
@@ -28,7 +29,7 @@ public interface RideMapper {
     @Mapping(target = "user", source = "user", nullValueCheckStrategy = NullValueCheckStrategy.ON_IMPLICIT_CONVERSION)
     RideDetailsDto rideToRideDetailsDto(Ride ride, User user);
 
-    List<RideDto> ridesToRideDtos(List<Ride> ride);
+    Collection<RideDto> ridesToRideDtos(Collection<Ride> ride);
     @Mapping(target = "point", source = "coordinates")
     PlaceDto placeToPlaceDto(Place place);
     default Point coordinatesToPoint(GeoJsonPoint coordinates) {

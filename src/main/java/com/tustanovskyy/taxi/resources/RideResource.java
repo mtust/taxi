@@ -38,10 +38,10 @@ public class RideResource {
         log.info("id: " + id);
         return rideService.findPartnersRide(id);
     }
-
     @GetMapping
-    public Collection<RideDto> rides() {
-        return rideService.getRides();
+    public Collection<RideDto> ridesByUser(@RequestParam("userId") String userId,
+                                           @RequestParam("isActive") Boolean isActive) {
+        return rideService.findRidesByUserAndStatus(userId, isActive);
     }
 
 }
