@@ -1,12 +1,11 @@
 package com.tustanovskyy.taxi.resources;
 
-import com.tustanovskyy.taxi.document.Ride;
 import com.tustanovskyy.taxi.dto.RideDetailsDto;
 import com.tustanovskyy.taxi.dto.RideDto;
 import com.tustanovskyy.taxi.service.RideService;
-import com.tustanovskyy.taxi.service.UserService;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
@@ -15,12 +14,10 @@ import java.util.Collection;
 @RequestMapping(path = "rides")
 @CrossOrigin(origins = "*")
 @Slf4j
+@AllArgsConstructor
 public class RideResource {
 
     private final RideService rideService;
-    public RideResource(RideService rideService) {
-        this.rideService = rideService;
-    }
 
     @PostMapping
     public RideDto createRide(@RequestBody RideDto ride) {

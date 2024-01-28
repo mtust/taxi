@@ -1,11 +1,9 @@
 package com.tustanovskyy.taxi.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.tustanovskyy.taxi.document.Place;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 
 import java.time.LocalDateTime;

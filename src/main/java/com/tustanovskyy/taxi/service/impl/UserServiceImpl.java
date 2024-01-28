@@ -11,7 +11,6 @@ import com.tustanovskyy.taxi.service.SmsService;
 import com.tustanovskyy.taxi.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -36,7 +35,7 @@ public class UserServiceImpl implements UserService {
         this.smsService = smsService;
     }
 
-//    public void createRideFromFacebook(String userFacebookId, String text) throws Exception {
+    //    public void createRideFromFacebook(String userFacebookId, String text) throws Exception {
 //        User user = userRepository.findByFacebookId(userFacebookId);
 //        if (user == null) {
 //            user = userRepository.save(user);

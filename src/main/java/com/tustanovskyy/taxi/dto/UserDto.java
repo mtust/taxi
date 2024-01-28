@@ -1,12 +1,10 @@
 package com.tustanovskyy.taxi.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.Email;
 
 @Data
 @NoArgsConstructor
