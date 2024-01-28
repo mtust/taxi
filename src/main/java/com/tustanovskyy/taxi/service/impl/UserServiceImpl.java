@@ -1,16 +1,14 @@
 package com.tustanovskyy.taxi.service.impl;
 
-import com.github.messenger4j.Messenger;
 import com.tustanovskyy.taxi.document.User;
 import com.tustanovskyy.taxi.dto.UserDto;
 import com.tustanovskyy.taxi.exception.ValidationException;
 import com.tustanovskyy.taxi.exception.VerificationCodeException;
 import com.tustanovskyy.taxi.repository.UserRepository;
-import com.tustanovskyy.taxi.service.RideService;
 import com.tustanovskyy.taxi.service.SmsService;
 import com.tustanovskyy.taxi.service.UserService;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -19,44 +17,11 @@ import java.util.Random;
 
 @Service
 @Slf4j
+@AllArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    @Value("${google.map.api.key}")
-    private String googleMapApiKey;
     private final UserRepository userRepository;
-    private final RideService rideService;
     private final SmsService smsService;
-
-    private Messenger messenger;
-
-    public UserServiceImpl(UserRepository userRepository, RideService rideService, SmsService smsService) {
-        this.userRepository = userRepository;
-        this.rideService = rideService;
-        this.smsService = smsService;
-    }
-
-    //    public void createRideFromFacebook(String userFacebookId, String text) throws Exception {
-//        User user = userRepository.findByFacebookId(userFacebookId);
-//        if (user == null) {
-//            user = userRepository.save(user);
-//        }
-//        GeoApiContext context = new GeoApiContext.Builder()
-//                .apiKey(googleMapApiKey)
-//                .build();
-//        GeocodingResult[] results = GeocodingApi.geocode(context,
-//                text).await();
-//        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-//        System.out.println(gson.toJson(results[0].addressComponents));
-//        String resultText = gson.toJson(results[0].addressComponents);
-//        final IdRecipient recipient = IdRecipient.create(userFacebookId);
-//        final NotificationType notificationType = NotificationType.REGULAR;
-//        final String metadata = "DEVELOPER_DEFINED_METADATA";
-//
-//        final TextMessage textMessage = TextMessage.create(resultText, empty(), of(metadata));
-//        this.messenger.queryUserProfile(userFacebookId);
-//        final MessagePayload messagePayload = MessagePayload.create(recipient, textMessage, of(notificationType));
-//        this.messenger.send(messagePayload);
-//    }
 
     @Override
     public User createUser(UserDto user) {
