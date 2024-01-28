@@ -5,7 +5,6 @@ import com.tustanovskyy.taxi.dto.RideDto;
 import com.tustanovskyy.taxi.service.RideService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
