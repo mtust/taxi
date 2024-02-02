@@ -19,7 +19,6 @@ import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.swing.text.html.Option;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -87,5 +86,17 @@ public class RideServiceImpl implements RideService {
     public Collection<RideDto> findRidesByUserAndStatus(String userId, Boolean isActive) {
         return rideMapper.ridesToRideDtos(rideRepository
                 .findByUserIdAndIsActive(userId, isActive));
+    }
+
+    @Override
+    public void cancelRide(String id) {
+        var ride = getRide(id);
+        ride.setIsActive(false);
+        rideRepository.save(ride);
+    }
+
+    private Ride getRide(String id) {
+        return rideRepository.findById(new ObjectId(id))
+                .orElseThrow(() -> new ValidationException("ride " + id + " not found"));
     }
 }

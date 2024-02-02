@@ -39,5 +39,9 @@ public class RideResource {
                                            @RequestParam("isActive") Boolean isActive) {
         return rideService.findRidesByUserAndStatus(userId, isActive);
     }
+    @DeleteMapping("/{id}")
+    public void cancelRide(@PathVariable String id) {
+        rideService.cancelRide(id);
+    }
 
 }
