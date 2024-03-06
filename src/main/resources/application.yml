@@ -16,7 +16,7 @@ spring:
       write_dates_as_timestamps: false
 twilio:
   accountSid: AC3a95b14e95eca5575e7561f77048dd28
-  authToken: 6ca5374995f83639f269118d43299ade
+  authToken: b2c8fe652fa841ae189bde35b9669283
   serviceId: MG3e36836ec02e7b7d6cc7daf5e12e0d81
 
 server:
