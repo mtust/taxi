@@ -1,6 +1,17 @@
 FROM gradle:jdk21 as gradleimage
 COPY . /home/gradle/source
 WORKDIR /home/gradle/source
+
+ARG DB_URI
+ARG TWILIO_SID
+ARG TWILIO_TOKEN
+ARG TWILIO_ID
+
+ENV DB_URI=$DB_URI
+ENV TWILIO_SID=$TWILIO_SID
+ENV TWILIO_TOKEN=$TWILIO_TOKEN
+ENV TWILIO_ID=$TWILIO_ID
+
 RUN ./gradlew build -x test
 FROM openjdk:21
 

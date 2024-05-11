@@ -3,7 +3,7 @@ spring:
     mongodb:
       auto-index-creation: true
 #      host: mongo
-      uri: mongodb+srv://mtust:admin@cluster0.ilb0w.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
+      uri: ${DB_URI}
 #      host: 127.0.0.1
 #      port: 27017
 #      dbname: taxi
@@ -15,9 +15,9 @@ spring:
     serialization:
       write_dates_as_timestamps: false
 twilio:
-  accountSid: AC3a95b14e95eca5575e7561f77048dd28
-  authToken: b2c8fe652fa841ae189bde35b9669283
-  serviceId: MG3e36836ec02e7b7d6cc7daf5e12e0d81
+  accountSid: ${TWILIO_ID}
+  authToken: ${TWILIO_SID}
+  serviceId: ${TWILIO_TOKEN}
 
 server:
   port: ${PORT:8080}
