@@ -19,7 +19,7 @@ jobs:
         uses: google-github-actions/setup-gcloud@v0
         with:
           version: 'latest'
-          service_account_email: ${{ACCOUNT_EMAIL}}
+          service_account_email: mtustanovskyy@gmail.com
           service_account_key: ${{ secrets.SERVICE_ACCOUNT_KEY }}
           export_default_credentials: true
           project_id: ${{ env.PROJECT_ID }}
