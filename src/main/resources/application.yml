@@ -3,7 +3,7 @@ spring:
     mongodb:
       auto-index-creation: true
 #      host: mongo
-      uri: ${DB_URI}
+      uri: mongodb+srv://${DB_USER}:${DB_PASSWORD}@cluster0.ilb0w.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
 #      host: 127.0.0.1
 #      port: 27017
 #      dbname: taxi

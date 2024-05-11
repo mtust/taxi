@@ -30,13 +30,15 @@ jobs:
 
       - name: Build
         env:
-          DB_URI: ${{ secrets.DB_URI }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_USER: ${{ secrets.DB_USER }}
           TWILIO_SID: ${{ secrets.TWILIO_SID }}
           TWILIO_TOKEN: ${{ secrets.TWILIO_TOKEN }}
           TWILIO_ID: ${{ secrets.TWILIO_ID }}
         run: |
           docker build \
-            --build-arg DB_URI=${DB_URI} \
+            --build-arg DB_PASSWORD=${DB_PASSWORD} \
+            --build-arg DB_USER=${DB_USER} \
             --build-arg TWILIO_SID=${TWILIO_SID} \
             --build-arg TWILIO_TOKEN=${TWILIO_TOKEN} \
             --build-arg TWILIO_ID=${TWILIO_ID} \
