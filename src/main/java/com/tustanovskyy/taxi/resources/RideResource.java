@@ -43,5 +43,4 @@ public class RideResource {
     public void cancelRide(@PathVariable String id) {
         rideService.cancelRide(id);
     }
-
 }
