@@ -11,10 +11,9 @@ spring:
     serialization:
       write_dates_as_timestamps: false
 twilio:
-  accountSid: ${TWILIO_SID}
-  authToken: ${TWILIO_TOKEN}
-  serviceId: ${TWILIO_ID}
+  accountSid: ${TWILIO_SID:AC3a95b14e95eca5575e7561f77048dd28}
+  authToken: ${TWILIO_TOKEN:668dac742f76b99c23d17a4c7e02c08f}
+  serviceId: ${TWILIO_ID:MG3e36836ec02e7b7d6cc7daf5e12e0d81}
 
 server:
   port: ${PORT:8080}
-
