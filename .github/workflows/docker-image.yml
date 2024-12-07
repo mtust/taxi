@@ -15,5 +15,10 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag taxiproject:$(date +%s)
-  
+      run: docker build . --build-arg DB_PASSWORD=${DB_PASSWORD} \
+        --build-arg DB_USER=${DB_USER} \
+        --build-arg TWILIO_SID=${TWILIO_SID} \
+        --build-arg TWILIO_TOKEN=${TWILIO_TOKEN} \
+        --build-arg TWILIO_ID=${TWILIO_ID} \ 
+        --file Dockerfile --tag taxiproject:$(date +%s)
+
