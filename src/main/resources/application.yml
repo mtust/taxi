@@ -2,7 +2,7 @@ spring:
   data:
     mongodb:
       auto-index-creation: true
-      uri: mongodb+srv://admin:admin@cluster0.ilb0w.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
+      uri: mongodb+srv://${DB_USER:admin}:${DB_PASSWORD:admin}@cluster0.ilb0w.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
     rest:
       detection-strategy: annotated
       return-body-on-create: true
@@ -11,9 +11,9 @@ spring:
     serialization:
       write_dates_as_timestamps: false
 twilio:
-  accountSid: ${TWILIO_SID}
-  authToken: ${TWILIO_TOKEN}
-  serviceId: ${TWILIO_ID}
+  accountSid: ${TWILIO_SID:AC3a95b14e95eca5575e7561f77048dd28}
+  authToken: ${TWILIO_TOKEN:178b4c0aee377c7055c328aef21f89b9}
+  serviceId: ${TWILIO_ID:MG3e36836ec02e7b7d6cc7daf5e12e0d81}
 
 server:
   port: ${PORT:8080}
