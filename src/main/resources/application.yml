@@ -12,7 +12,7 @@ spring:
       write_dates_as_timestamps: false
 twilio:
   accountSid: ${TWILIO_SID:AC3a95b14e95eca5575e7561f77048dd28}
-  authToken: ${TWILIO_TOKEN:178b4c0aee377c7055c328aef21f89b9}
+  authToken: ${TWILIO_TOKEN:f139a7d3ad58b3d04faa20605aef04a4}
   serviceId: ${TWILIO_ID:MG3e36836ec02e7b7d6cc7daf5e12e0d81}
 
 server:
