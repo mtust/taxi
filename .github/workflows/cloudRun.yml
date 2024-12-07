@@ -1,58 +1,64 @@
----
-name: Build and Push Java Image to Google Cloud Run
+name: Build and Deploy to Google Cloud Run
+
 on:
   push:
-    branches: [ master ]
+    branches:
+      - master
+
 jobs:
-  build:
-    name: Cloud Run Deployment
+  deploy:
     runs-on: ubuntu-latest
+
     env:
       IMAGE_NAME: taxiproject
       PROJECT_ID: taxiproject-209815
+
     steps:
+      # Checkout the code
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-      - name: Checkout
-        uses: actions/checkout@master
-
-      - name: Setup GCP Service Account
-        uses: google-github-actions/setup-gcloud@v0
+      # Set up Google Cloud SDK
+      - name: Setup Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
         with:
-          version: 'latest'
-          service_account_email: mtustanovskyy@gmail.com
-          service_account_key: ${{ secrets.SERVICE_ACCOUNT_KEY }}
-          export_default_credentials: true
           project_id: ${{ env.PROJECT_ID }}
+          service_account_key: ${{ secrets.SERVICE_ACCOUNT_KEY }}
 
-      - name: Configure Docker
-        run: |
-          gcloud auth configure-docker
+      # Authenticate Docker with Google Cloud
+      - name: Configure Docker for GCP
+        run: gcloud auth configure-docker
 
-      - name: Build
+      # Build Docker Image with Secrets
+      - name: Build Docker Image
         env:
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_URI: ${{ secrets.DB_URI }}
           DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           TWILIO_SID: ${{ secrets.TWILIO_SID }}
           TWILIO_TOKEN: ${{ secrets.TWILIO_TOKEN }}
           TWILIO_ID: ${{ secrets.TWILIO_ID }}
         run: |
           docker build \
-            --build-arg DB_PASSWORD=${DB_PASSWORD} \
+            --build-arg DB_URI=${DB_URI} \
             --build-arg DB_USER=${DB_USER} \
+            --build-arg DB_PASSWORD=${DB_PASSWORD} \
             --build-arg TWILIO_SID=${TWILIO_SID} \
             --build-arg TWILIO_TOKEN=${TWILIO_TOKEN} \
             --build-arg TWILIO_ID=${TWILIO_ID} \
             -t gcr.io/$PROJECT_ID/$IMAGE_NAME:latest .
 
-      - name: Push
-        run: |
-          docker push gcr.io/$PROJECT_ID/$IMAGE_NAME:latest
+      # Push Docker Image to Google Container Registry
+      - name: Push Docker Image to Google Container Registry
+        run: docker push gcr.io/$PROJECT_ID/$IMAGE_NAME:latest
 
-      - name: Deploy
+      # Deploy to Google Cloud Run
+      - name: Deploy to Google Cloud Run
         run: |
           gcloud run deploy taxirun \
+          --image gcr.io/$PROJECT_ID/$IMAGE_NAME:latest \
           --region us-central1 \
-          --image gcr.io/$PROJECT_ID/$IMAGE_NAME \
           --platform managed \
           --allow-unauthenticated \
-          --project $PROJECT_ID 
+          --project $PROJECT_ID \
+          --set-env-vars DB_URI=${{ secrets.DB_URI }},DB_USER=${{ secrets.DB_USER }},DB_PASSWORD=${{ secrets.DB_PASSWORD }},TWILIO_SID=${{ secrets.TWILIO_SID }},TWILIO_TOKEN=${{ secrets.TWILIO_TOKEN }},TWILIO_ID=${{ secrets.TWILIO_ID }}
