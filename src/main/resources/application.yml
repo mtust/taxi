@@ -2,7 +2,7 @@ spring:
   data:
     mongodb:
       auto-index-creation: true
-      uri: mongodb+srv://${DB_USER:admin}:${DB_PASSWORD:admin}@cluster0.ilb0w.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
+      uri: mongodb+srv://${DB_USER}:${DB_PASSWORD}@cluster0.ilb0w.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
     rest:
       detection-strategy: annotated
       return-body-on-create: true
