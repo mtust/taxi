@@ -19,7 +19,7 @@ jobs:
         uses: google-github-actions/setup-gcloud@v0
         with:
           version: 'latest'
-          service_account_email: mtustanovskyy@gmail.com
+          service_account_email: ${{ vars.ACCOUNT_EMAIL}}
           service_account_key: ${{ secrets.SERVICE_ACCOUNT_KEY }}
           export_default_credentials: true
           project_id: ${{ env.PROJECT_ID }}
@@ -32,9 +32,9 @@ jobs:
         env:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_USER: ${{ secrets.DB_USER }}
-          TWILIO_SID: ${{ secrets.TWILIO_SID }}
-          TWILIO_TOKEN: ${{ secrets.TWILIO_TOKEN }}
-          TWILIO_ID: ${{ secrets.TWILIO_ID }}
+          TWILIO_SID: ${{ vars.TWILIO_SID }}
+          TWILIO_TOKEN: ${{ vars.TWILIO_TOKEN }}
+          TWILIO_ID: ${{ vars.TWILIO_ID }}
         run: |
           docker build \
             --build-arg DB_PASSWORD=${DB_PASSWORD} \
@@ -53,9 +53,9 @@ jobs:
           DB_URI: ${{ secrets.DB_URI }}
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          TWILIO_SID: ${{ secrets.TWILIO_SID }}
-          TWILIO_TOKEN: ${{ secrets.TWILIO_TOKEN }}
-          TWILIO_ID: ${{ secrets.TWILIO_ID }}
+          TWILIO_SID: ${{ vars.TWILIO_SID }}
+          TWILIO_TOKEN: ${{ vars.TWILIO_TOKEN }}
+          TWILIO_ID: ${{ vars.TWILIO_ID }}
         run: |
           gcloud run deploy taxirun \
           --region us-central1 \
