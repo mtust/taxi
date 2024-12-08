@@ -1,6 +1,7 @@
 package com.tustanovskyy.taxi.config;
 
 import com.twilio.Twilio;
+import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,10 +21,8 @@ public class TwilioConfig {
     @Value("${twilio.serviceId}")
     private String twilioServiceId;
 
-    public TwilioConfig() {
-        log.info("sid: {} ", accountSid);
-        log.info("token {} ", authToken);
-        log.info("id: {} ", twilioServiceId);
+    @PostConstruct
+    public void init() {
         Twilio.init(accountSid, authToken);
     }
 
