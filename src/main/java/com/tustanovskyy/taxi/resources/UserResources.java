@@ -1,9 +1,9 @@
 package com.tustanovskyy.taxi.resources;
 
 import com.tustanovskyy.taxi.document.User;
-import com.tustanovskyy.taxi.dto.CodeDto;
-import com.tustanovskyy.taxi.dto.PhoneDto;
-import com.tustanovskyy.taxi.dto.UserDto;
+import com.tustanovskyy.taxi.domain.request.CodeRequest;
+import com.tustanovskyy.taxi.domain.request.PhoneRequest;
+import com.tustanovskyy.taxi.domain.request.SignUpRequest;
 import com.tustanovskyy.taxi.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,9 +20,8 @@ public class UserResources {
 
     private final UserService userService;
 
-
     @PostMapping
-    public User createUser(@RequestBody UserDto user) {
+    public User signUp(@RequestBody SignUpRequest user) {
         return userService.createUser(user);
     }
 
@@ -32,13 +31,13 @@ public class UserResources {
     }
 
     @PostMapping("verify/phone")
-    public void verifyPhone(@RequestBody PhoneDto phoneDto) {
-            userService.sendVerificationCode(phoneDto.getPhoneNumber());
+    public void verifyPhone(@RequestBody PhoneRequest phoneRequest) {
+            userService.sendVerificationCode(phoneRequest.getPhoneNumber());
     }
 
     @PostMapping("verify")
-    public User verifyCode(@RequestBody CodeDto codeDto) {
-        return userService.validateCode(codeDto.getCode(), codeDto.getPhoneNumber());
+    public User verifyCode(@RequestBody CodeRequest codeRequest) {
+        return userService.validateCode(codeRequest.getCode(), codeRequest.getPhoneNumber());
     }
 
 }

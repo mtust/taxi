@@ -2,6 +2,7 @@ package com.tustanovskyy.taxi.document;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,9 +10,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.time.LocalDateTime;
-import java.util.Collection;
 
 @Document
 @Data
@@ -28,6 +26,8 @@ public class User {
     private String lastName;
 
     private String email;
+
+    private String password;
 
     private String phoneNumber;
     @JsonIgnore

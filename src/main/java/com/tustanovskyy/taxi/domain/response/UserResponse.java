@@ -1,6 +1,5 @@
-package com.tustanovskyy.taxi.dto;
+package com.tustanovskyy.taxi.domain.response;
 
-import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,11 +8,10 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserDto {
+public class UserResponse {
     private String id;
     private String firstName;
     private String lastName;
-    @Email
     private String email;
     private String phoneNumber;
 }

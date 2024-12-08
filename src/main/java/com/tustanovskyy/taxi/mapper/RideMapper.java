@@ -1,38 +1,45 @@
 package com.tustanovskyy.taxi.mapper;
 
-import com.tustanovskyy.taxi.document.Place;
 import com.tustanovskyy.taxi.document.Ride;
 import com.tustanovskyy.taxi.document.User;
-import com.tustanovskyy.taxi.dto.PlaceDto;
-import com.tustanovskyy.taxi.dto.RideDetailsDto;
-import com.tustanovskyy.taxi.dto.RideDto;
+import com.tustanovskyy.taxi.domain.Place;
+import com.tustanovskyy.taxi.domain.RideDetails;
+import com.tustanovskyy.taxi.domain.request.RideRequest;
+import com.tustanovskyy.taxi.domain.response.RideResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.NullValueCheckStrategy;
+import org.mapstruct.ReportingPolicy;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 
 import java.util.Collection;
-import java.util.List;
 
-@Mapper
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.WARN)
 public interface RideMapper {
-    Ride rideDtoToRide(RideDto rideDto);
-    Collection<Ride> rideDtosToRides(Collection<RideDto> rideDto);
+
+    Ride rideDtoToRide(RideRequest rideRequest);
+
+
     @Mapping(target = "coordinates", source = "point")
-    Place placeDtoToPlace(PlaceDto placeDto);
-    default GeoJsonPoint pointToCoordinates(Point point) {
-        return new GeoJsonPoint(point);
-    }
-    RideDto rideToRideDto(Ride ride);
+    com.tustanovskyy.taxi.document.Place placeDtoToPlace(Place place);
+
+    RideResponse rideToRideDto(Ride ride);
+
     @Mapping(target = "id", source = "ride.id")
     @Mapping(target = "user", source = "user", nullValueCheckStrategy = NullValueCheckStrategy.ON_IMPLICIT_CONVERSION)
-    RideDetailsDto rideToRideDetailsDto(Ride ride, User user);
+    RideDetails rideToRideDetailsDto(Ride ride, User user);
 
-    Collection<RideDto> ridesToRideDtos(Collection<Ride> ride);
+    Collection<RideResponse> ridesToRideDto(Collection<Ride> ride);
+
     @Mapping(target = "point", source = "coordinates")
-    PlaceDto placeToPlaceDto(Place place);
+    Place placeToPlaceDto(com.tustanovskyy.taxi.document.Place place);
+
     default Point coordinatesToPoint(GeoJsonPoint coordinates) {
         return new Point(coordinates);
+    }
+
+    default GeoJsonPoint pointToCoordinates(Point point) {
+        return new GeoJsonPoint(point);
     }
 }

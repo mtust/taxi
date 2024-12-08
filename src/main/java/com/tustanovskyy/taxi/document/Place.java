@@ -15,6 +15,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Builder
 public class Place {
     private String name;
+
     private Integer distance;
+
     private GeoJsonPoint coordinates;
 }
