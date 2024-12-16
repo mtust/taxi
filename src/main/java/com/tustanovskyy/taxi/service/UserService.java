@@ -6,9 +6,11 @@ import com.tustanovskyy.taxi.exception.ValidationException;
 import com.tustanovskyy.taxi.exception.VerificationCodeException;
 import com.tustanovskyy.taxi.mapper.UserMapper;
 import com.tustanovskyy.taxi.repository.UserRepository;
+import com.tustanovskyy.taxi.security.JwtTokenUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -22,11 +24,14 @@ public class UserService {
     private final UserRepository userRepository;
     private final SmsService smsService;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtTokenUtil jwtTokenUtil;
 
 
     public User createUser(SignUpRequest user) {
         validateUser(user);
-        var created = userRepository.save(userMapper.userDtoToUser(user));
+        var created = userRepository.save(userMapper.signUpRequestToUser(user)
+                .setPassword(passwordEncoder.encode(user.getPassword())));
         sendVerificationCode(created);
         return created;
     }
@@ -61,6 +66,21 @@ public class UserService {
         return user;
     }
 
+    public String login(String phoneNumber, String password) {
+        User user = userRepository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!user.isRegistrationCompleted()) {
+            throw new RuntimeException("Phone number not verified");
+        }
+
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new RuntimeException("Invalid password");
+        }
+
+        return jwtTokenUtil.generateToken(user.getPhoneNumber());
+    }
+
     private void sendVerificationCode(User user) {
         String code = getRandomNumberString();
         var phoneNumber = user.getPhoneNumber();
@@ -72,6 +92,9 @@ public class UserService {
     }
 
     private void validateUser(SignUpRequest user) {
+        if (!user.getPassword().equals(user.getPasswordRetry())) {
+            throw new ValidationException("passwords doesn't match");
+        }
         var phoneNumber = user.getPhoneNumber();
         if (StringUtils.isEmpty(phoneNumber)) {
             throw new ValidationException("phone number is empty");
