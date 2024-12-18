@@ -5,16 +5,14 @@ import com.tustanovskyy.taxi.domain.request.RecoveryPasswordRequest;
 import com.tustanovskyy.taxi.domain.request.SignUpRequest;
 import com.tustanovskyy.taxi.domain.response.LoginResponse;
 import com.tustanovskyy.taxi.exception.ValidationException;
-import com.tustanovskyy.taxi.exception.VerificationCodeException;
 import com.tustanovskyy.taxi.mapper.UserMapper;
 import com.tustanovskyy.taxi.repository.UserRepository;
 import com.tustanovskyy.taxi.security.JwtTokenUtil;
+import com.tustanovskyy.taxi.service.validatior.UserValidator;
 import java.time.LocalDateTime;
 import java.util.Random;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -28,82 +26,51 @@ public class UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenUtil jwtTokenUtil;
-
-    @Value("${taxi.user.code.active.minutes}")
-    private Integer validationCodeActiveTime;
-
+    private final UserValidator userValidator;
 
     public User createUser(SignUpRequest user) {
-        validateUser(user);
+        userValidator.validateSignUpRequest(user);
         var created = userRepository.save(userMapper.signUpRequestToUser(user)
                 .setPassword(passwordEncoder.encode(user.getPassword())));
         sendVerificationCode(created);
         return created;
     }
 
-
     public User findUser(String userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new ValidationException("user not found"));
+                .orElseThrow(() -> new ValidationException("User not found"));
     }
 
-
     public void sendVerificationCode(String phoneNumber) {
-        sendVerificationCode(this.getUserByPhoneNumber(phoneNumber));
+        sendVerificationCode(getUserByPhoneNumber(phoneNumber));
     }
 
     public LoginResponse validateCode(String code, String phoneNumber) {
-        User user = userRepository.findByPhoneNumber(phoneNumber).orElseThrow(() ->
-                new VerificationCodeException("user by phone number not found"));
-        if (user.getVerificationCodeDate() == null
-                || LocalDateTime.now().minusMinutes(validationCodeActiveTime)
-                .isAfter(user.getVerificationCodeDate())) {
-            throw new VerificationCodeException("please request new sms verification code");
-        }
-        if (!user.getVerificationCode().equals(code)) {
-            throw new VerificationCodeException("validation code not correct");
-        }
+        User user = getUserByPhoneNumber(phoneNumber);
+        userValidator.validateVerificationCode(user, code);
+
         if (!user.isRegistrationCompleted()) {
             user.setRegistrationCompleted(true);
             user = userRepository.save(user);
         }
+
         return createLoginResponse(user);
     }
 
     public LoginResponse login(String phoneNumber, String password) {
         User user = getUserByPhoneNumber(phoneNumber);
-        if (!user.isRegistrationCompleted()) {
-            throw new RuntimeException("Phone number not verified");
-        }
-
-        if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new RuntimeException("Invalid password");
-        }
+        userValidator.validateLogin(user, password, passwordEncoder);
         return createLoginResponse(user);
     }
 
-    public LoginResponse recoveryPassword(RecoveryPasswordRequest recoveryPasswordRequest) {
-        if (!recoveryPasswordRequest.getPassword().equals(recoveryPasswordRequest.getPasswordRetry())) {
-            throw new ValidationException("passwords doesn't match");
-        }
+    public LoginResponse recoveryPassword(RecoveryPasswordRequest request) {
+        userValidator.validateRecoveryPasswordRequest(request);
+        User user = getUserByPhoneNumber(request.getPhoneNumber());
+        userValidator.validateRecoveryPassword(user, request);
 
-        User user = getUserByPhoneNumber(recoveryPasswordRequest.getPhoneNumber());
-
-        if (!user.isPasswordForgot()) {
-            throw new ValidationException("user wasn't requested change password");
-        }
-
-        if (user.getVerificationCodeDate() == null
-                || LocalDateTime.now().minusMinutes(validationCodeActiveTime)
-                .isAfter(user.getVerificationCodeDate())) {
-            throw new VerificationCodeException("please request new sms verification code");
-        }
-
-        if (!user.getVerificationCode().equals(recoveryPasswordRequest.getCode())) {
-            throw new VerificationCodeException("validation code not correct");
-        }
-
-        return createLoginResponse(userRepository.save(user.setPasswordForgot(false)));
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setPasswordForgot(false);
+        return createLoginResponse(userRepository.save(user));
     }
 
     public boolean forgotPassword(String phoneNumber) {
@@ -120,41 +87,20 @@ public class UserService {
     }
 
     public User getUserByPhoneNumber(String phoneNumber) {
-        return userRepository
-                .findByPhoneNumber(phoneNumber)
-                .orElseThrow(() -> new ValidationException("user not found"));
+        return userRepository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new ValidationException("User not found"));
     }
 
     private void sendVerificationCode(User user) {
         String code = getRandomNumberString();
-        var phoneNumber = user.getPhoneNumber();
-        LocalDateTime now = LocalDateTime.now();
-        user.setVerificationCodeDate(now);
+        user.setVerificationCodeDate(LocalDateTime.now());
         user.setVerificationCode(code);
         userRepository.save(user);
-        smsService.sendSms(phoneNumber, code);
-    }
-
-    private void validateUser(SignUpRequest user) {
-        if (!user.getPassword().equals(user.getPasswordRetry())) {
-            throw new ValidationException("passwords doesn't match");
-        }
-        var phoneNumber = user.getPhoneNumber();
-        if (StringUtils.isEmpty(phoneNumber)) {
-            throw new ValidationException("phone number is empty");
-        }
-        if (userRepository.findByPhoneNumber(phoneNumber).isPresent()) {
-            throw new ValidationException("User with the phone number already exists");
-        }
+        smsService.sendSms(user.getPhoneNumber(), code);
     }
 
     private static String getRandomNumberString() {
-        // It will generate 6 digit random Number.
-        // from 0 to 999999
-        Random rnd = new Random();
-        int number = rnd.nextInt(999999);
-
-        // this will convert any number sequence into 6 character.
-        return String.format("%06d", number);
+        return String.format("%06d", new Random().nextInt(999999));
     }
 }
+

@@ -31,7 +31,7 @@ public class RideResource {
     }
 
     @GetMapping("/{id}/partners")
-    public Collection<RideResponse> findPartners(@PathVariable String id) {
+    public Collection<RideDetails> findPartners(@PathVariable String id) {
         log.info("id: {}", id);
         return rideService.findPartnersRide(id);
     }
