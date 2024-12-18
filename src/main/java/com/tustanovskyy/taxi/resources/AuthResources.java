@@ -4,10 +4,13 @@ import com.tustanovskyy.taxi.document.User;
 import com.tustanovskyy.taxi.domain.request.CodeRequest;
 import com.tustanovskyy.taxi.domain.request.LoginRequest;
 import com.tustanovskyy.taxi.domain.request.PhoneRequest;
+import com.tustanovskyy.taxi.domain.request.RecoveryPasswordRequest;
 import com.tustanovskyy.taxi.domain.request.SignUpRequest;
+import com.tustanovskyy.taxi.domain.response.LoginResponse;
 import com.tustanovskyy.taxi.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.repository.query.Param;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,12 +37,22 @@ public class AuthResources {
     }
 
     @PostMapping("/verify")
-    public User verifyCode(@RequestBody CodeRequest codeRequest) {
+    public LoginResponse verifyCode(@RequestBody CodeRequest codeRequest) {
         return userService.validateCode(codeRequest.getCode(), codeRequest.getPhoneNumber());
     }
 
     @PostMapping("/login")
-    public String login(@RequestBody LoginRequest loginRequest) {
+    public LoginResponse login(@RequestBody LoginRequest loginRequest) {
         return userService.login(loginRequest.getPhoneNumber(), loginRequest.getPassword());
+    }
+
+    @PostMapping("/forgot/password")
+    public boolean forgotPassword(@Param("phoneNumber") String phoneNumber) {
+        return userService.forgotPassword(phoneNumber);
+    }
+
+    @PostMapping("/recovery/password")
+    public LoginResponse forgotPassword(@RequestBody RecoveryPasswordRequest recoveryPasswordRequest) {
+        return userService.recoveryPassword(recoveryPasswordRequest);
     }
 }

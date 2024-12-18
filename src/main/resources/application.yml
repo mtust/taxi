@@ -25,3 +25,7 @@ taxi:
   ride:
     active:
       minutes: 30
+  user:
+    code:
+      active:
+        minutes: 10

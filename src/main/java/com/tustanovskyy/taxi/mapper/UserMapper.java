@@ -2,6 +2,7 @@ package com.tustanovskyy.taxi.mapper;
 
 import com.tustanovskyy.taxi.document.User;
 import com.tustanovskyy.taxi.domain.request.SignUpRequest;
+import com.tustanovskyy.taxi.domain.response.UserResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
@@ -11,4 +12,6 @@ public interface UserMapper {
 
     @Mapping(target = "password", ignore = true)
     User signUpRequestToUser(SignUpRequest signUpRequest);
+
+    UserResponse toUserResponse(User user);
 }
