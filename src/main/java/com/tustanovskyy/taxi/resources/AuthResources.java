@@ -47,7 +47,7 @@ public class AuthResources {
     }
 
     @PostMapping("/forgot/password")
-    public boolean forgotPassword(@Param("phoneNumber") String phoneNumber) {
+    public boolean forgotPassword(@RequestBody String phoneNumber) {
         return userService.forgotPassword(phoneNumber);
     }
 
