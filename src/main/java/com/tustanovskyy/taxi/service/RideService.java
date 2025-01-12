@@ -2,6 +2,7 @@ package com.tustanovskyy.taxi.service;
 
 import com.tustanovskyy.taxi.document.Place;
 import com.tustanovskyy.taxi.document.Ride;
+import com.tustanovskyy.taxi.document.User;
 import com.tustanovskyy.taxi.domain.RideDetails;
 import com.tustanovskyy.taxi.domain.request.RideRequest;
 import com.tustanovskyy.taxi.domain.response.RideResponse;
@@ -34,10 +35,12 @@ public class RideService {
     private Integer activeRideTime;
 
     @Transactional
-    public RideResponse createRide(RideRequest ride) {
-        log.info("ride to store: {}", ride);
+    public RideResponse createRide(RideRequest ride, String phoneNumber) {
+        User user = userService.findByPhoneNumber(phoneNumber);
         Ride rideDocument = rideMapper.rideDtoToRide(ride);
+        rideDocument.setUserId(user.getId());
         rideDocument.setIsActive(true);
+        log.info("ride to store: {}", rideDocument);
         return rideMapper.rideToRideDto(rideRepository.save(rideDocument));
     }
 

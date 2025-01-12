@@ -41,6 +41,11 @@ public class UserService {
                 .orElseThrow(() -> new ValidationException("User not found"));
     }
 
+    public User findByPhoneNumber(String phoneNumber) {
+        return userRepository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new ValidationException("User not found"));
+    }
+
     public void sendVerificationCode(String phoneNumber) {
         sendVerificationCode(getUserByPhoneNumber(phoneNumber));
     }

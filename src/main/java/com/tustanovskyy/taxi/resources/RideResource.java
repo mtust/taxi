@@ -6,6 +6,7 @@ import com.tustanovskyy.taxi.domain.response.RideResponse;
 import com.tustanovskyy.taxi.service.RideService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
@@ -20,8 +21,10 @@ public class RideResource {
     private final RideService rideService;
 
     @PostMapping
-    public RideResponse createRide(@RequestBody RideRequest ride) {
-        return rideService.createRide(ride);
+    public RideResponse createRide(@RequestBody RideRequest ride,
+                                   @AuthenticationPrincipal String phoneNumber) {
+        log.info("Creating ride for user with phone number: {}", phoneNumber);
+        return rideService.createRide(ride, phoneNumber);
     }
 
     @GetMapping("{id}")

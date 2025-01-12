@@ -9,9 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RideRequest {
-
     private Place placeFrom;
     private Place placeTo;
-    private Boolean isActive;
-    private String userId;
 }
