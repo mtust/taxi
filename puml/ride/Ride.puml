@@ -1,0 +1,26 @@
+
+@startuml
+start
+
+:Create ride (placeFrom, placeTo) with  user auth header;
+if (Ride created?) then (Yes)
+  :Move to ride details page;
+  :Show ride details and fetch partner ride every five seconds;
+  if (want cancel ride?) then (Yes)
+    :Cancel ride;
+    if (Ride canceled?) then (Yes)
+        :Move to main page;
+    else (No)
+        :Show error;
+    endif
+  else (No)
+    :partner found;
+    :go to partner (user) details page with contacts info;
+   endif
+else (No)
+  :Show error (Stay on the same page);
+endif
+stop;
+
+
+@enduml

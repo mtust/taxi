@@ -1,0 +1,22 @@
+
+@startuml
+start
+
+:Форма реєстрації (First Name, Last Name, Email, Phone Number, Password, Password Retry);
+if (Дані коректні?) then (Так)
+  :Надсилаємо SMS-код;
+  :Переходимо на сторінку вводу SMS;
+  :Вводимо SMS-код;
+  if (SMS-код коректний?) then (Так)
+    :Отримуємо Auth Token і дані користувача;
+    :Переходимо на головну сторінку користувача;
+    stop
+  else (Ні)
+    :Висвітлюємо помилку;
+  endif
+else (Ні)
+  :Висвітлюємо помилку;
+endif
+
+
+@enduml

@@ -1,0 +1,14 @@
+
+@startuml
+start
+
+:Login form (phoneNumber, password);
+if (Дані коректні?) then (Так)
+  :Отримуємо Auth Token і дані користувача;
+  :Переходимо на головну сторінку користувача;
+else (Ні)
+  :Висвітлюємо помилку;
+endif
+stop;
+
+@enduml
