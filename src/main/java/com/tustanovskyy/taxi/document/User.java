@@ -28,6 +28,8 @@ public class User {
 
     private String email;
 
+    private Place homeAddress;
+
     @JsonIgnore
     private String password;
 

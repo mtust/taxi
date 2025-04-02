@@ -1,10 +1,12 @@
 package com.tustanovskyy.taxi.service;
 
 import com.tustanovskyy.taxi.document.User;
+import com.tustanovskyy.taxi.domain.Place;
 import com.tustanovskyy.taxi.domain.request.RecoveryPasswordRequest;
 import com.tustanovskyy.taxi.domain.request.SignUpRequest;
 import com.tustanovskyy.taxi.domain.response.LoginResponse;
 import com.tustanovskyy.taxi.exception.ValidationException;
+import com.tustanovskyy.taxi.mapper.RideMapper;
 import com.tustanovskyy.taxi.mapper.UserMapper;
 import com.tustanovskyy.taxi.repository.UserRepository;
 import com.tustanovskyy.taxi.security.JwtTokenUtil;
@@ -24,6 +26,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final SmsService smsService;
     private final UserMapper userMapper;
+    private final RideMapper rideMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenUtil jwtTokenUtil;
     private final UserValidator userValidator;
@@ -94,6 +97,13 @@ public class UserService {
     public User getUserByPhoneNumber(String phoneNumber) {
         return userRepository.findByPhoneNumber(phoneNumber)
                 .orElseThrow(() -> new ValidationException("User not found"));
+    }
+
+    public User addHomeAddress(Place homeAddress, String phoneNumber) {
+        return userRepository.findByPhoneNumber(phoneNumber)
+                .map(user -> user.setHomeAddress(rideMapper.placeDtoToPlace(homeAddress)))
+                .map(userRepository::save)
+                .orElseThrow(() -> new RuntimeException("failed to add home address"));
     }
 
     private void sendVerificationCode(User user) {
