@@ -11,6 +11,7 @@ import org.mapstruct.ReportingPolicy;
 public interface UserMapper {
 
     @Mapping(target = "password", ignore = true)
+    @Mapping(target = "role", constant = "USER")
     User signUpRequestToUser(SignUpRequest signUpRequest);
 
     UserResponse toUserResponse(User user);

@@ -37,8 +37,12 @@ public class RideService {
     @Transactional
     public RideResponse createRide(RideRequest ride, String phoneNumber) {
         User user = userService.findByPhoneNumber(phoneNumber);
+        String userId = user.getId();
+        if (!rideRepository.findByUserIdAndIsActive(userId, true).isEmpty()) {
+            throw new ValidationException("user " + userId + " already have active rides. Please cancel active ride");
+        }
         Ride rideDocument = rideMapper.rideDtoToRide(ride);
-        rideDocument.setUserId(user.getId());
+        rideDocument.setUserId(userId);
         rideDocument.setIsActive(true);
         log.info("ride to store: {}", rideDocument);
         return rideMapper.rideToRideDto(rideRepository.save(rideDocument));
