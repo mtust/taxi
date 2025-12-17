@@ -17,7 +17,7 @@ ENV TWILIO_TOKEN=$TWILIO_TOKEN
 ENV TWILIO_ID=$TWILIO_ID
 
 RUN ./gradlew build -x test
-FROM openjdk:21
+FROM eclipse-temurin:21
 
 EXPOSE 8080
 #COPY --from=gradleimage /home/gradle/source/build/libs/*.jar app.jar
