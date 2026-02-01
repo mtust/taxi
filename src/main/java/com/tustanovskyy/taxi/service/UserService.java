@@ -2,6 +2,7 @@ package com.tustanovskyy.taxi.service;
 
 import com.tustanovskyy.taxi.document.User;
 import com.tustanovskyy.taxi.domain.Place;
+import com.tustanovskyy.taxi.domain.request.EditUserRequest;
 import com.tustanovskyy.taxi.domain.request.RecoveryPasswordRequest;
 import com.tustanovskyy.taxi.domain.request.SignUpRequest;
 import com.tustanovskyy.taxi.domain.response.LoginResponse;
@@ -116,6 +117,19 @@ public class UserService {
 
     private static String getRandomNumberString() {
         return String.format("%06d", new Random().nextInt(999999));
+    }
+
+    public User editUser(EditUserRequest editUserRequest, String phoneNumber) {
+        User user = this.getUserByPhoneNumber(phoneNumber);
+        user.setFirstName(editUserRequest.getFirstName());
+        user.setLastName(editUserRequest.getLastName());
+        user.setEmail(editUserRequest.getEmail());
+        return userRepository.save(user);
+    }
+
+    public void deleteUser(String phoneNumber) {
+        User user = this.getUserByPhoneNumber(phoneNumber);
+        userRepository.deleteById(user.getId());
     }
 }
 
