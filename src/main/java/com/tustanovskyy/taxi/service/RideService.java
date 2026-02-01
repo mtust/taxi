@@ -10,6 +10,7 @@ import com.tustanovskyy.taxi.exception.ValidationException;
 import com.tustanovskyy.taxi.mapper.RideMapper;
 import com.tustanovskyy.taxi.repository.RideRepository;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,7 +40,8 @@ public class RideService {
         User user = userService.findByPhoneNumber(phoneNumber);
         String userId = user.getId();
         if (!rideRepository.findByUserIdAndIsActive(userId, true).isEmpty()) {
-            throw new ValidationException("user " + userId + " already have active rides. Please cancel active ride");
+            log.error("user {} already have active rides", userId);
+            throw new ValidationException("user " + user.getFirstName() + " " + user.getLastName() + " already have active rides. Please cancel active ride");
         }
         Ride rideDocument = rideMapper.rideDtoToRide(ride);
         rideDocument.setUserId(userId);
@@ -50,27 +52,27 @@ public class RideService {
 
 
     @Transactional
-    public Collection<RideDetails> findPartnersRide(Ride currentRide) {
+    public Collection<RideDetails> findPartnersRide(Ride currentRide, boolean onlyFromPartner) {
 
         List<Ride> ridesFrom = findByPlaceFromCoordinatesNear(currentRide.getPlaceFrom());
-        log.info("ridesFrom: {}", ridesFrom);
 
-        List<Ride> ridesTo = findByPlaceToCoordinatesNear(currentRide.getPlaceTo());
-        log.info("ridesTo: {}", ridesTo);
+        List<Ride> ridesTo = onlyFromPartner ? new ArrayList<>()
+                : findByPlaceToCoordinatesNear(currentRide.getPlaceTo());
 
         return ridesFrom
                 .stream()
-                .filter(rideFrom -> ridesTo.contains(rideFrom) && !rideFrom.equals(currentRide))
+                .filter(rideFrom -> onlyFromPartner || ridesTo.contains(rideFrom))
+                .filter(rideFrom -> !rideFrom.getId().equals(currentRide.getId()))
                 .map(ride -> rideMapper.rideToRideDetailsDto(ride, userService.findUser(ride.getUserId())))
                 .collect(Collectors.toList());
     }
 
 
     @Transactional
-    public Collection<RideDetails> findPartnersRide(String rideId) {
-        Ride currentRide = rideRepository.findById(new ObjectId(rideId)).get();
+    public Collection<RideDetails> findPartnersRide(String rideId, boolean onlyFromPartner) {
+        Ride currentRide = this.getRide(rideId);
         log.info("ride: {}", currentRide);
-        return this.findPartnersRide(currentRide);
+        return this.findPartnersRide(currentRide, onlyFromPartner);
     }
 
 

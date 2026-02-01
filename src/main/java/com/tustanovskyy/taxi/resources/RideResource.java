@@ -42,9 +42,10 @@ public class RideResource {
     }
 
     @GetMapping("/{id}/partners")
-    public Collection<RideDetails> findPartners(@PathVariable String id) {
+    public Collection<RideDetails> findPartners(@PathVariable String id,
+                                                @RequestParam("onlyFromPartner") boolean onlyFromPartner) {
         log.info("id: {}", id);
-        return rideService.findPartnersRide(id);
+        return rideService.findPartnersRide(id, onlyFromPartner);
     }
 
     @GetMapping
@@ -64,7 +65,7 @@ public class RideResource {
     }
 
     @PostMapping("/{id}/chat/{partnerId}")
-    public void createChatWithPartner(@PathVariable String id, 
+    public void createChatWithPartner(@PathVariable String id,
                                     @PathVariable String partnerId,
                                     @AuthenticationPrincipal String phoneNumber) {
         log.info("Creating chat for ride: {} with partner: {}", id, partnerId);
