@@ -2,6 +2,7 @@ package com.tustanovskyy.taxi.service;
 
 import com.tustanovskyy.taxi.document.User;
 import com.tustanovskyy.taxi.domain.Place;
+import com.tustanovskyy.taxi.domain.Role;
 import com.tustanovskyy.taxi.domain.request.EditUserRequest;
 import com.tustanovskyy.taxi.domain.request.RecoveryPasswordRequest;
 import com.tustanovskyy.taxi.domain.request.SignUpRequest;
@@ -130,6 +131,13 @@ public class UserService {
     public void deleteUser(String phoneNumber) {
         User user = this.getUserByPhoneNumber(phoneNumber);
         userRepository.deleteById(user.getId());
+    }
+
+    public void checkAccess(String phoneNumber, String userId) {
+        var currentUser = this.getUserByPhoneNumber(phoneNumber);
+        if (!currentUser.getId().equals(userId) || Role.ADMIN.equals(currentUser.getRole())) {
+            throw new ValidationException("Access denied");
+        }
     }
 }
 

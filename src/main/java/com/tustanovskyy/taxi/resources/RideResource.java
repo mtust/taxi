@@ -1,21 +1,27 @@
 package com.tustanovskyy.taxi.resources;
 
+import com.tustanovskyy.taxi.document.Ride;
 import com.tustanovskyy.taxi.domain.RideDetails;
-import com.tustanovskyy.taxi.domain.Role;
 import com.tustanovskyy.taxi.domain.request.ChatRequest;
 import com.tustanovskyy.taxi.domain.request.RideRequest;
 import com.tustanovskyy.taxi.domain.response.RideResponse;
-import com.tustanovskyy.taxi.exception.ValidationException;
 import com.tustanovskyy.taxi.service.ChatService;
 import com.tustanovskyy.taxi.service.RideService;
 import com.tustanovskyy.taxi.service.UserService;
+import java.util.Arrays;
+import java.util.Collection;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.Arrays;
-import java.util.Collection;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(path = "rides")
@@ -43,25 +49,27 @@ public class RideResource {
 
     @GetMapping("/{id}/partners")
     public Collection<RideDetails> findPartners(@PathVariable String id,
-                                                @RequestParam("onlyFromPartner") boolean onlyFromPartner) {
+                                                @RequestParam("onlyFromPartner") boolean onlyFromPartner,
+                                                @AuthenticationPrincipal String phoneNumber) {
         log.info("id: {}", id);
-        return rideService.findPartnersRide(id, onlyFromPartner);
+        Ride currentRide = rideService.getRide(id);
+        userService.checkAccess(phoneNumber, currentRide.getUserId());
+        return rideService.findPartnersRide(currentRide, onlyFromPartner);
     }
 
     @GetMapping
     public Collection<RideResponse> ridesByUser(@RequestParam("userId") String userId,
                                                 @RequestParam("isActive") Boolean isActive,
                                                 @AuthenticationPrincipal String phoneNumber) {
-        var currentUser = userService.getUserByPhoneNumber(phoneNumber);
-        if (!currentUser.getId().equals(userId) || Role.ADMIN.equals(currentUser.getRole())) {
-            throw new ValidationException("Access denied");
-        }
+        userService.checkAccess(phoneNumber, userId);
         return rideService.findRidesByUserAndStatus(userId, isActive);
     }
 
     @DeleteMapping("/{id}")
-    public void cancelRide(@PathVariable String id) {
-        rideService.cancelRide(id);
+    public void cancelRide(@PathVariable String id, @AuthenticationPrincipal String phoneNumber) {
+        Ride ride = rideService.getRide(id);
+        userService.checkAccess(phoneNumber, ride.getUserId());
+        rideService.cancelRide(ride);
     }
 
     @PostMapping("/{id}/chat/{partnerId}")

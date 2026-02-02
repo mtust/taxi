@@ -68,13 +68,6 @@ public class RideService {
     }
 
 
-    @Transactional
-    public Collection<RideDetails> findPartnersRide(String rideId, boolean onlyFromPartner) {
-        Ride currentRide = this.getRide(rideId);
-        log.info("ride: {}", currentRide);
-        return this.findPartnersRide(currentRide, onlyFromPartner);
-    }
-
 
     @Transactional
     public RideDetails findRide(String rideId) {
@@ -88,13 +81,12 @@ public class RideService {
                 .findByUserIdAndIsActive(userId, isActive));
     }
 
-    public void cancelRide(String id) {
-        var ride = getRide(id);
+    public void cancelRide(Ride ride) {
         ride.setIsActive(false);
         rideRepository.save(ride);
     }
 
-    private Ride getRide(String id) {
+    public Ride getRide(String id) {
         return rideRepository.findById(new ObjectId(id))
                 .orElseThrow(() -> new ValidationException("ride " + id + " not found"));
     }
