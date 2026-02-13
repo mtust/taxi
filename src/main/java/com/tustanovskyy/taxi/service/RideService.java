@@ -39,7 +39,7 @@ public class RideService {
     public RideResponse createRide(RideRequest ride, String phoneNumber) {
         User user = userService.findByPhoneNumber(phoneNumber);
         String userId = user.getId();
-        if (!rideRepository.findByUserIdAndIsActive(userId, true).isEmpty()) {
+        if (!rideRepository.findByUserIdAndIsActiveOrderByDateDesc(userId, true).isEmpty()) {
             log.error("user {} already have active rides", userId);
             throw new ValidationException("user " + user.getFirstName() + " " + user.getLastName() + " already have active rides. Please cancel active ride");
         }
@@ -83,7 +83,7 @@ public class RideService {
 
     public Collection<RideResponse> findRidesByUserAndStatus(String userId, Boolean isActive) {
         return rideMapper.ridesToRideDto(rideRepository
-                .findByUserIdAndIsActive(userId, isActive));
+                .findByUserIdAndIsActiveOrderByDateDesc(userId, isActive));
     }
 
     public void cancelRide(Ride ride) {

@@ -26,7 +26,7 @@ public interface RideRepository extends MongoRepository<Ride, ObjectId> {
 
     Collection<Ride> findByIdAndIsActive(String id, Boolean isActive);
 
-    Collection<Ride> findByUserIdAndIsActive(String userId, Boolean isActive);
+    Collection<Ride> findByUserIdAndIsActiveOrderByDateDesc(String userId, Boolean isActive);
 
     @Query("""
         {'placeFrom.coordinates': { $near: { $geometry: ?2, $maxDistance: ?3 } },
