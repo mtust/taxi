@@ -54,6 +54,11 @@ public class RideService {
     @Transactional
     public Collection<RideDetails> findPartnersRide(Ride currentRide, boolean onlyFromPartner) {
 
+        if (onlyFromPartner != currentRide.isSearchOnlyFrom()) {
+            currentRide.setSearchOnlyFrom(onlyFromPartner);
+            rideRepository.save(currentRide);
+        }
+
         List<Ride> ridesFrom = findByPlaceFromCoordinatesNear(currentRide.getPlaceFrom());
 
         List<Ride> ridesTo = onlyFromPartner ? new ArrayList<>()

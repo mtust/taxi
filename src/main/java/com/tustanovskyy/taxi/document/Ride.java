@@ -28,5 +28,6 @@ public class Ride {
     private Place placeTo;
     private Boolean isActive;
     private String userId;
+    private boolean searchOnlyFrom;
 
 }
