@@ -28,6 +28,8 @@ public interface RideRepository extends MongoRepository<Ride, ObjectId> {
 
     Collection<Ride> findByUserIdAndIsActiveOrderByDateDesc(String userId, Boolean isActive);
 
+    List<Ride> findByIsActiveTrueAndDateBefore(LocalDateTime date);
+
     @Query("""
         {'placeFrom.coordinates': { $near: { $geometry: ?2, $maxDistance: ?3 } },
         'isActive': ?0, 'date': { $gt: ?1 } }

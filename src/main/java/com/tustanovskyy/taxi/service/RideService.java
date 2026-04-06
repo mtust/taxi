@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -89,6 +90,17 @@ public class RideService {
     public void cancelRide(Ride ride) {
         ride.setIsActive(false);
         rideRepository.save(ride);
+    }
+
+    @Scheduled(fixedRate = 60000)
+    public void deactivateOldRides() {
+        LocalDateTime timeToDeactivateRuns = LocalDateTime.now().minusMinutes(activeRideTime);
+        List<Ride> oldRides = rideRepository.findByIsActiveTrueAndDateBefore(timeToDeactivateRuns);
+        if (!oldRides.isEmpty()) {
+            log.info("Deactivating {} old rides created before {}", oldRides.size(), timeToDeactivateRuns);
+            oldRides.forEach(ride -> ride.setIsActive(false));
+            rideRepository.saveAll(oldRides);
+        }
     }
 
     public Ride getRide(String id) {
