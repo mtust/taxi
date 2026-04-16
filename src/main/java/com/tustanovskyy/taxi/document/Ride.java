@@ -29,5 +29,6 @@ public class Ride {
     private Boolean isActive;
     private String userId;
     private boolean searchOnlyFrom;
+    private Integer passengerCount;
 
 }

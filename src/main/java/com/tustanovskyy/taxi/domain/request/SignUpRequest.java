@@ -1,5 +1,6 @@
 package com.tustanovskyy.taxi.domain.request;
 
+import com.tustanovskyy.taxi.domain.Sex;
 import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,6 +15,7 @@ import lombok.experimental.Accessors;
 public class SignUpRequest {
     private String firstName;
     private String lastName;
+    private Sex sex;
     @Email
     private String email;
     private String phoneNumber;

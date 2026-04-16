@@ -22,4 +22,7 @@ public class RideResponse {
     private Place placeTo;
     private Boolean isActive;
     private String userId;
+    private boolean searchOnlyFrom;
+
+    private Integer passengerCount;
 }

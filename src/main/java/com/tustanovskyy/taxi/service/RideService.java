@@ -4,6 +4,7 @@ import com.tustanovskyy.taxi.document.Place;
 import com.tustanovskyy.taxi.document.Ride;
 import com.tustanovskyy.taxi.document.User;
 import com.tustanovskyy.taxi.domain.RideDetails;
+import com.tustanovskyy.taxi.domain.Sex;
 import com.tustanovskyy.taxi.domain.request.RideRequest;
 import com.tustanovskyy.taxi.domain.response.RideResponse;
 import com.tustanovskyy.taxi.exception.ValidationException;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,9 +53,13 @@ public class RideService {
         return rideMapper.rideToRideDto(rideRepository.save(rideDocument));
     }
 
-
     @Transactional
     public Collection<RideDetails> findPartnersRide(Ride currentRide, boolean onlyFromPartner) {
+        return findPartnersRide(currentRide, onlyFromPartner, false);
+    }
+
+    @Transactional
+    public Collection<RideDetails> findPartnersRide(Ride currentRide, boolean onlyFromPartner, boolean sameSex) {
 
         if (onlyFromPartner != currentRide.isSearchOnlyFrom()) {
             currentRide.setSearchOnlyFrom(onlyFromPartner);
@@ -69,11 +75,10 @@ public class RideService {
                 .stream()
                 .filter(rideFrom -> onlyFromPartner || ridesTo.contains(rideFrom))
                 .filter(rideFrom -> !rideFrom.getId().equals(currentRide.getId()))
+                .filter(rideFrom -> !sameSex || getRideSex(rideFrom).equals(getRideSex(currentRide)))
                 .map(ride -> rideMapper.rideToRideDetailsDto(ride, userService.findUser(ride.getUserId())))
                 .collect(Collectors.toList());
     }
-
-
 
     @Transactional
     public RideDetails findRide(String rideId) {
@@ -140,5 +145,9 @@ public class RideService {
                 LocalDateTime.now().minusMinutes(activeRideTime),
                 place.getCoordinates(),
                 (double) place.getDistance());
+    }
+
+    private Sex getRideSex(Ride ride) {
+        return userService.findUser(ride.getUserId()).getSex();
     }
 }

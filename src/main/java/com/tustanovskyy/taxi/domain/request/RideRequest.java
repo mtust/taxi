@@ -12,4 +12,5 @@ public class RideRequest {
     private Place placeFrom;
     private Place placeTo;
     private boolean searchOnlyFrom;
+    private Integer passengerCount;
 }

@@ -4,6 +4,7 @@ package com.tustanovskyy.taxi.document;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.LocalDateTime;
 import com.tustanovskyy.taxi.domain.Role;
+import com.tustanovskyy.taxi.domain.Sex;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -32,6 +33,8 @@ public class User {
     private Place homeAddress;
 
     private Role role;
+
+    private Sex sex;
 
     @JsonIgnore
     private String password;

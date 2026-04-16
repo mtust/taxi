@@ -22,4 +22,6 @@ public class RideDetails {
     private Place placeTo;
     private Boolean isActive;
     private UserResponse user;
+    private boolean searchOnlyFrom;
+    private Integer passengerCount;
 }

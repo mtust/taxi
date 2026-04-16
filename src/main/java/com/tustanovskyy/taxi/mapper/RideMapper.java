@@ -18,8 +18,8 @@ import java.util.Collection;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.WARN)
 public interface RideMapper {
 
+    @Mapping(target = "passengerCount", source = "passengerCount", defaultValue = "1")
     Ride rideDtoToRide(RideRequest rideRequest);
-
 
     @Mapping(target = "coordinates", source = "point")
     com.tustanovskyy.taxi.document.Place placeDtoToPlace(Place place);
