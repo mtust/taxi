@@ -16,5 +16,6 @@ public class EditUserRequest {
     private String lastName;
     @Email
     private String email;
+    private String language;
 
 }

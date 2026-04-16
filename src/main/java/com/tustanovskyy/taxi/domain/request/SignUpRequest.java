@@ -16,6 +16,7 @@ public class SignUpRequest {
     private String firstName;
     private String lastName;
     private Sex sex;
+    private String language;
     @Email
     private String email;
     private String phoneNumber;

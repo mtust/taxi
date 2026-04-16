@@ -18,4 +18,5 @@ public class UserResponse {
     private String email;
     private String phoneNumber;
     private Sex sex;
+    private String language;
 }

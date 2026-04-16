@@ -36,6 +36,8 @@ public class User {
 
     private Sex sex;
 
+    private String language;
+
     @JsonIgnore
     private String password;
 
