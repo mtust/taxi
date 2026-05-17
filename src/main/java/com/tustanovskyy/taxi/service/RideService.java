@@ -150,4 +150,27 @@ public class RideService {
     private Sex getRideSex(Ride ride) {
         return userService.findUser(ride.getUserId()).getSex();
     }
+
+    @Transactional
+    public RideResponse agreeRide(String rideId, String partnerUserId, String phoneNumber) {
+        User user = userService.findByPhoneNumber(phoneNumber);
+        Ride ride = getRide(rideId);
+        if (!ride.getUserId().equals(user.getId())) {
+            throw new ValidationException("Access denied");
+        }
+        ride.setAgreedPartnerUserId(partnerUserId);
+        return rideMapper.rideToRideDto(rideRepository.save(ride));
+    }
+
+    @Transactional
+    public void completeRide(String rideId, String phoneNumber) {
+        User user = userService.findByPhoneNumber(phoneNumber);
+        Ride ride = getRide(rideId);
+        if (!ride.getUserId().equals(user.getId())) {
+            throw new ValidationException("Access denied");
+        }
+        ride.setIsActive(false);
+        ride.setIsCompleted(true);
+        rideRepository.save(ride);
+    }
 }

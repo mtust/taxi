@@ -2,6 +2,7 @@ package com.tustanovskyy.taxi.resources;
 
 import com.tustanovskyy.taxi.document.Ride;
 import com.tustanovskyy.taxi.domain.RideDetails;
+import com.tustanovskyy.taxi.domain.request.AgreeRideRequest;
 import com.tustanovskyy.taxi.domain.request.ChatRequest;
 import com.tustanovskyy.taxi.domain.request.RideRequest;
 import com.tustanovskyy.taxi.domain.response.RideResponse;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -80,6 +82,21 @@ public class RideResource {
         var currentUser = userService.getUserByPhoneNumber(phoneNumber);
         var chatRequest = new ChatRequest(id, Arrays.asList(currentUser.getId(), partnerId));
         chatService.createChat(chatRequest, phoneNumber);
+    }
+
+    @PostMapping("/{rideId}/agree")
+    public RideResponse agreeRide(@PathVariable String rideId,
+                                   @RequestBody AgreeRideRequest request,
+                                   @AuthenticationPrincipal String phoneNumber) {
+        log.info("Agreeing ride {} with partner {}", rideId, request.getPartnerUserId());
+        return rideService.agreeRide(rideId, request.getPartnerUserId(), phoneNumber);
+    }
+
+    @PutMapping("/{rideId}/complete")
+    public void completeRide(@PathVariable String rideId,
+                              @AuthenticationPrincipal String phoneNumber) {
+        log.info("Completing ride {} by {}", rideId, phoneNumber);
+        rideService.completeRide(rideId, phoneNumber);
     }
 
 }

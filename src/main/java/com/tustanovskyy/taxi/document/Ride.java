@@ -30,5 +30,7 @@ public class Ride {
     private String userId;
     private boolean searchOnlyFrom;
     private Integer passengerCount;
+    private String agreedPartnerUserId;
+    private Boolean isCompleted;
 
 }

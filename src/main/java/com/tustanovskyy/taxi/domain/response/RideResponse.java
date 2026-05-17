@@ -25,4 +25,6 @@ public class RideResponse {
     private boolean searchOnlyFrom;
 
     private Integer passengerCount;
+    private String agreedPartnerUserId;
+    private Boolean isCompleted;
 }

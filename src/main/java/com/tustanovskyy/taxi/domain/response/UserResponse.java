@@ -16,7 +16,8 @@ public class UserResponse {
     private String firstName;
     private String lastName;
     private String email;
-    private String phoneNumber;
     private Sex sex;
     private String language;
+    private Double averageRating;
+    private Integer ratingCount;
 }

@@ -58,4 +58,7 @@ public class User {
 
     private boolean passwordForgot;
 
+    private Double averageRating;
+    private Integer ratingCount;
+
 }
