@@ -17,7 +17,7 @@ public class SmsService {
     public void sendSms(String toPhoneNumber, String code) {
         Message message = Message.creator(
                         new PhoneNumber(toPhoneNumber), // to
-                        new PhoneNumber(twilioConfig.getTwilioServiceId()),
+                        twilioConfig.getTwilioServiceId(), // messaging service SID (MG...)
                         "Your taxi app verification code: " + code)
                 .create();
         log.info("message: {} \nsid: {}", message.getBody(), message.getSid());
