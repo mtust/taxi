@@ -12,6 +12,7 @@ import lombok.experimental.Accessors;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document
@@ -41,6 +42,7 @@ public class User {
     @JsonIgnore
     private String password;
 
+    @Indexed(unique = true)
     private String phoneNumber;
     @JsonIgnore
     private String verificationCode;

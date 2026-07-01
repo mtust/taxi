@@ -9,9 +9,17 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document
+@CompoundIndexes({
+    @CompoundIndex(name = "ride_user_active_date", def = "{'userId': 1, 'isActive': 1, 'date': -1}"),
+    @CompoundIndex(name = "ride_active_date", def = "{'isActive': 1, 'date': 1}"),
+    @CompoundIndex(name = "ride_from_geo", def = "{'placeFrom.coordinates': '2dsphere', 'isActive': 1, 'date': 1}"),
+    @CompoundIndex(name = "ride_to_geo", def = "{'placeTo.coordinates': '2dsphere', 'isActive': 1, 'date': 1}")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

@@ -8,12 +8,18 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Document
+@CompoundIndexes({
+    @CompoundIndex(name = "chat_participants_active", def = "{'participantIds': 1, 'isActive': 1}"),
+    @CompoundIndex(name = "chat_ride_active", def = "{'rideId': 1, 'isActive': 1}")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
