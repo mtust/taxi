@@ -21,6 +21,12 @@ server:
     include-message: always
     include-binding-errors: always
 
+jwt:
+  # Base64-encoded HS256 secret. MUST be a stable value (override via JWT_SECRET env var in prod).
+  # Keeping it stable means issued tokens stay valid across server restarts/redeploys.
+  secret: ${JWT_SECRET}
+  expiration-days: ${JWT_EXPIRATION_DAYS:30}
+
 taxi:
   ride:
     active:

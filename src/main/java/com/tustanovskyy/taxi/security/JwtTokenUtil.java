@@ -2,17 +2,27 @@ package com.tustanovskyy.taxi.security;
 
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import java.security.Key;
+import java.time.Duration;
 import java.util.Date;
 
 @Component
 public class JwtTokenUtil {
 
-    private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256); // Use a secure key in production
-    private final long expirationTime = 1000 * 60 * 60 * 24; // 24 hours
+    private final Key key;
+    private final long expirationTime;
+
+    public JwtTokenUtil(
+            @Value("${jwt.secret}") String secret,
+            @Value("${jwt.expiration-days:30}") long expirationDays) {
+        // Stable key loaded from config so tokens survive server restarts/redeploys.
+        this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
+        this.expirationTime = Duration.ofDays(expirationDays).toMillis();
+    }
 
     public String generateToken(String phoneNumber) {
         return Jwts.builder()
