@@ -63,6 +63,10 @@ dependencies {
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
 }
 
+tasks.named('jar') {
+    enabled = false
+}
+
 test {
     useJUnitPlatform()
     testLogging {
