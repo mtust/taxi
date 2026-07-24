@@ -29,7 +29,7 @@ EXPOSE 8080
 #ENV HOST 0.0.0.0
 #ENTRYPOINT ["java", "-jar", "/opt/app/app.jar"]
 
-COPY --from=gradleimage /home/gradle/source/build/libs/* /app.jar
+COPY --from=gradleimage /home/gradle/source/build/libs/*.jar /app.jar
 
 # Run the web service on container startup.
 CMD ["java", "-jar", "/app.jar"]
