@@ -37,6 +37,6 @@ public class UserValidator extends BaseValidator{
     public void validateRecoveryPasswordRequest(RecoveryPasswordRequest request) {
         validate(() -> request.getPassword().equals(request.getPasswordRetry()), "Passwords do not match");
         validate(() -> smsService.checkVerification(request.getPhoneNumber(),
-                request.getPassword()), "Invalid verification code");
+                request.getCode()), "Invalid verification code");
     }
 }
