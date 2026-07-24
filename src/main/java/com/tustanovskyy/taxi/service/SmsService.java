@@ -40,7 +40,8 @@ public class SmsService {
                 .setTo(toPhoneNumber)
                 .setCode(userSubmittedCode)
                 .create();
-        log.info("Verification check status={}", check.getStatus());
+        log.info("Verification check: status={} valid={} sid={} to={}, code={}, number={}",
+                check.getStatus(), check.getValid(), check.getSid(), check.getTo(), userSubmittedCode, toPhoneNumber);
         return "approved".equals(check.getStatus());
     }
 }
