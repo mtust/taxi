@@ -44,8 +44,6 @@ public class User {
 
     @Indexed(unique = true)
     private String phoneNumber;
-    @JsonIgnore
-    private String verificationCode;
 
     @CreatedDate
     private LocalDateTime createdDate;
@@ -54,11 +52,12 @@ public class User {
     private LocalDateTime updatedDate;
 
     @JsonIgnore
-    private LocalDateTime verificationCodeDate;
+    private LocalDateTime lastTimePhoneVerified;
 
     private boolean registrationCompleted;
 
     private boolean passwordForgot;
+    private boolean passwordForgotDate;
 
     private Double averageRating;
     private Integer ratingCount;

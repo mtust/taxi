@@ -40,6 +40,7 @@ jobs:
             --build-arg DB_PASSWORD=${DB_PASSWORD} \
             --build-arg DB_USER=${DB_USER} \
             --build-arg TWILIO_SID=${TWILIO_SID} \
+            --build-arg TWILIO_VERIFY_SID=${TWILIO_VERIFY_SID} \
             --build-arg TWILIO_TOKEN=${TWILIO_TOKEN} \
             --build-arg TWILIO_ID=${TWILIO_ID} \
             -t gcr.io/$PROJECT_ID/$IMAGE_NAME:latest .
@@ -54,6 +55,7 @@ jobs:
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           TWILIO_SID: ${{ vars.TWILIO_SID }}
+          TWILIO_VERIFY_SID: ${{ vars.TWILIO_VERIFY_SID }}
           TWILIO_TOKEN: ${{ vars.TWILIO_TOKEN }}
           TWILIO_ID: ${{ vars.TWILIO_ID }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
@@ -64,4 +66,4 @@ jobs:
           --platform managed \
           --allow-unauthenticated \
           --project $PROJECT_ID \
-          --set-env-vars "^@^DB_USER=${DB_USER}@DB_PASSWORD=${DB_PASSWORD}@TWILIO_SID=${TWILIO_SID}@TWILIO_TOKEN=${TWILIO_TOKEN}@TWILIO_ID=${TWILIO_ID}@JWT_SECRET=${JWT_SECRET}"
+          --set-env-vars "^@^DB_USER=${DB_USER}@DB_PASSWORD=${DB_PASSWORD}@TWILIO_SID=${TWILIO_SID}@TWILIO_VERIFY_SID=${TWILIO_VERIFY_SID}@TWILIO_TOKEN=${TWILIO_TOKEN}@TWILIO_ID=${TWILIO_ID}@JWT_SECRET=${JWT_SECRET}"

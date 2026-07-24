@@ -37,7 +37,7 @@ public class UserService {
         userValidator.validateSignUpRequest(user);
         var created = userRepository.save(userMapper.signUpRequestToUser(user)
                 .setPassword(passwordEncoder.encode(user.getPassword())));
-        sendVerificationCode(created);
+        sendUserPhoneVerification(created.getPhoneNumber());
         return created;
     }
 
@@ -51,16 +51,13 @@ public class UserService {
                 .orElseThrow(() -> new ValidationException("User not found"));
     }
 
-    public void sendVerificationCode(String phoneNumber) {
-        sendVerificationCode(getUserByPhoneNumber(phoneNumber));
-    }
-
     public LoginResponse validateCode(String code, String phoneNumber) {
         User user = getUserByPhoneNumber(phoneNumber);
-        userValidator.validateVerificationCode(user, code);
+        smsService.checkVerification(phoneNumber, code);
 
         if (!user.isRegistrationCompleted()) {
             user.setRegistrationCompleted(true);
+            user.setLastTimePhoneVerified(LocalDateTime.now());
             user = userRepository.save(user);
         }
 
@@ -76,7 +73,6 @@ public class UserService {
     public LoginResponse recoveryPassword(RecoveryPasswordRequest request) {
         userValidator.validateRecoveryPasswordRequest(request);
         User user = getUserByPhoneNumber(request.getPhoneNumber());
-        userValidator.validateRecoveryPassword(user, request);
 
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setPasswordForgot(false);
@@ -86,7 +82,6 @@ public class UserService {
     public boolean forgotPassword(String phoneNumber) {
         User user = getUserByPhoneNumber(phoneNumber);
         user.setPasswordForgot(true);
-        sendVerificationCode(user);
         return true;
     }
 
@@ -108,12 +103,8 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("failed to add home address"));
     }
 
-    private void sendVerificationCode(User user) {
-        String code = getRandomNumberString();
-        user.setVerificationCodeDate(LocalDateTime.now());
-        user.setVerificationCode(code);
-        userRepository.save(user);
-        smsService.sendSms(user.getPhoneNumber(), code);
+    public void sendUserPhoneVerification(String phoneNumber) {
+        smsService.sendVerification(phoneNumber);
     }
 
     private static String getRandomNumberString() {

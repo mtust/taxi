@@ -32,7 +32,7 @@ public class AuthResources {
 
     @PostMapping("verify/phone")
     public void verifyPhone(@RequestBody PhoneRequest phoneRequest) {
-        userService.sendVerificationCode(phoneRequest.getPhoneNumber());
+        userService.sendUserPhoneVerification(phoneRequest.getPhoneNumber());
     }
 
     @PostMapping("/verify")

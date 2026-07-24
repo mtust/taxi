@@ -12,6 +12,7 @@ spring:
       write_dates_as_timestamps: false
 twilio:
   accountSid: ${TWILIO_SID}
+  verifyServiceSid: ${TWILIO_VERIFY_SID}
   authToken: ${TWILIO_TOKEN}
   serviceId: ${TWILIO_ID}
 
@@ -34,4 +35,4 @@ taxi:
   user:
     code:
       active:
-        minutes: 10
+        minutes: 1

@@ -19,6 +19,10 @@ public class TwilioConfig {
     @Value("${twilio.serviceId}")
     private String twilioServiceId;
 
+    @Getter
+    @Value("${twilio.verifyServiceSid}")
+    private String verifyServiceSid;
+
     @PostConstruct
     public void init() {
         Twilio.init(accountSid, authToken);
