@@ -39,7 +39,7 @@ jobs:
         run: |
           docker build \
             --build-arg DB_PASSWORD=${DB_PASSWORD} \
-            --build-arg DB_USER=${DB_USER} \                        
+            --build-arg DB_USER=${DB_USER} \
             --build-arg TWILIO_TOKEN=${TWILIO_TOKEN} \
             --build-arg TWILIO_ID=${TWILIO_ID} \
             --build-arg TWILIO_VERIFY_SID=${TWILIO_VERIFY_SID} \
