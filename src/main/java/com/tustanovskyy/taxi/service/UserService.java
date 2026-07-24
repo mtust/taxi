@@ -81,6 +81,7 @@ public class UserService {
 
     public boolean forgotPassword(String phoneNumber) {
         User user = getUserByPhoneNumber(phoneNumber);
+        log.info("user with number {} forgot password", phoneNumber);
         user.setPasswordForgot(true);
         return true;
     }
