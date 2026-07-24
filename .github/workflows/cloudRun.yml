@@ -35,14 +35,15 @@ jobs:
           TWILIO_SID: ${{ vars.TWILIO_SID }}
           TWILIO_TOKEN: ${{ vars.TWILIO_TOKEN }}
           TWILIO_ID: ${{ vars.TWILIO_ID }}
+          TWILIO_VERIFY_SID: ${{ vars.TWILIO_VERIFY_SID }}
         run: |
           docker build \
             --build-arg DB_PASSWORD=${DB_PASSWORD} \
             --build-arg DB_USER=${DB_USER} \
-            --build-arg TWILIO_SID=${TWILIO_SID} \
-            --build-arg TWILIO_VERIFY_SID=${TWILIO_VERIFY_SID} \
+            --build-arg TWILIO_SID=${TWILIO_SID} \            
             --build-arg TWILIO_TOKEN=${TWILIO_TOKEN} \
             --build-arg TWILIO_ID=${TWILIO_ID} \
+            --build-arg TWILIO_VERIFY_SID=${TWILIO_VERIFY_SID} \
             -t gcr.io/$PROJECT_ID/$IMAGE_NAME:latest .
 
       - name: Push
