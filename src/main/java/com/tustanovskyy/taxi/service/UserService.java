@@ -82,6 +82,7 @@ public class UserService {
     public boolean forgotPassword(String phoneNumber) {
         User user = getUserByPhoneNumber(phoneNumber);
         log.info("user with number {} forgot password", phoneNumber);
+        sendUserPhoneVerification(phoneNumber);
         user.setPasswordForgot(true);
         return true;
     }
@@ -105,7 +106,8 @@ public class UserService {
     }
 
     public void sendUserPhoneVerification(String phoneNumber) {
-        smsService.sendVerification(phoneNumber);
+        String status = smsService.sendVerification(phoneNumber);
+        log.info("status {} of sms sending to {}", status, phoneNumber);
     }
 
     private static String getRandomNumberString() {
