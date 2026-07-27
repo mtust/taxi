@@ -3,6 +3,7 @@ package com.tustanovskyy.taxi.document;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.LocalDateTime;
+import java.util.List;
 import com.tustanovskyy.taxi.domain.Role;
 import com.tustanovskyy.taxi.domain.Sex;
 import lombok.AllArgsConstructor;
@@ -53,6 +54,13 @@ public class User {
 
     @JsonIgnore
     private LocalDateTime lastTimePhoneVerified;
+
+    /**
+     * Sliding window (max 3) of timestamps when a verification SMS was sent to this user.
+     * Used to enforce an escalating cooldown between resends and prevent SMS spam.
+     */
+    @JsonIgnore
+    private List<LocalDateTime> smsSentAt;
 
     private boolean registrationCompleted;
 

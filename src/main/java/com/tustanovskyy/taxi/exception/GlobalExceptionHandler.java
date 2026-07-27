@@ -8,6 +8,17 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(SmsRateLimitException.class)
+    public ResponseEntity<ErrorResponse> handleSmsRateLimitException(SmsRateLimitException ex) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.TOO_MANY_REQUESTS.value(),
+                ex.getMessage(),
+                System.currentTimeMillis(),
+                ex.getRetryAfterSeconds()
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.TOO_MANY_REQUESTS);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception ex) {
         // Custom error response body
