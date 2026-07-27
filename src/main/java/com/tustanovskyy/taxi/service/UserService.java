@@ -87,7 +87,11 @@ public class UserService {
     }
 
     public LoginResponse login(String phoneNumber, String password) {
-        User user = getUserByPhoneNumber(phoneNumber);
+        // Deliberately not using getUserByPhoneNumber/USER_NOT_FOUND here: an unknown phone
+        // number must look identical to a wrong password, otherwise the endpoint can be used
+        // to enumerate which phone numbers are registered.
+        User user = userRepository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new ValidationException(ErrorCode.INVALID_CREDENTIALS, "Invalid phone number or password"));
         userValidator.validateLogin(user, password, passwordEncoder);
         return createLoginResponse(user);
     }

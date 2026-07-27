@@ -34,8 +34,10 @@ public class UserValidator extends BaseValidator{
 
     public void validateLogin(User user, String password, PasswordEncoder passwordEncoder) {
         validate(user::isRegistrationCompleted, ErrorCode.PHONE_NOT_VERIFIED, "Phone number not verified");
+        // Intentionally the same error as "phone number not found" in UserService#login -
+        // never reveal which of the two was wrong.
         validate(() -> passwordEncoder.matches(password, user.getPassword()),
-                ErrorCode.INVALID_PASSWORD, "Invalid password");
+                ErrorCode.INVALID_CREDENTIALS, "Invalid phone number or password");
     }
 
     public void validateRecoveryPasswordRequest(RecoveryPasswordRequest request) {

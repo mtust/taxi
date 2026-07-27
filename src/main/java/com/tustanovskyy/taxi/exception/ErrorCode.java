@@ -15,7 +15,11 @@ public enum ErrorCode {
     PHONE_NUMBER_EMPTY(HttpStatus.BAD_REQUEST),
     USER_ALREADY_EXISTS(HttpStatus.CONFLICT),
     PHONE_NOT_VERIFIED(HttpStatus.BAD_REQUEST),
-    INVALID_PASSWORD(HttpStatus.UNAUTHORIZED),
+    /**
+     * Deliberately shared by "no such phone number" and "wrong password" during login, so the
+     * response never discloses which one was incorrect.
+     */
+    INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED),
     INVALID_VERIFICATION_CODE(HttpStatus.BAD_REQUEST),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND),
     ACCESS_DENIED(HttpStatus.FORBIDDEN),
