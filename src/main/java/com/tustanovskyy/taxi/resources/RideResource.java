@@ -5,10 +5,12 @@ import com.tustanovskyy.taxi.domain.RideDetails;
 import com.tustanovskyy.taxi.domain.request.AgreeRideRequest;
 import com.tustanovskyy.taxi.domain.request.ChatRequest;
 import com.tustanovskyy.taxi.domain.request.RideRequest;
+import com.tustanovskyy.taxi.domain.response.ChatResponse;
 import com.tustanovskyy.taxi.domain.response.RideResponse;
 import com.tustanovskyy.taxi.service.ChatService;
 import com.tustanovskyy.taxi.service.RideService;
 import com.tustanovskyy.taxi.service.UserService;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import lombok.AllArgsConstructor;
@@ -75,13 +77,13 @@ public class RideResource {
     }
 
     @PostMapping("/{id}/chat/{partnerId}")
-    public void createChatWithPartner(@PathVariable String id,
+    public ChatResponse createChatWithPartner(@PathVariable String id,
                                     @PathVariable String partnerId,
                                     @AuthenticationPrincipal String phoneNumber) {
         log.info("Creating chat for ride: {} with partner: {}", id, partnerId);
         var currentUser = userService.getUserByPhoneNumber(phoneNumber);
-        var chatRequest = new ChatRequest(id, Arrays.asList(currentUser.getId(), partnerId));
-        chatService.createChat(chatRequest, phoneNumber);
+        var chatRequest = new ChatRequest(id, new ArrayList<>(Arrays.asList(currentUser.getId(), partnerId)));
+        return chatService.createChat(chatRequest, phoneNumber);
     }
 
     @PostMapping("/{rideId}/agree")

@@ -15,7 +15,12 @@ import com.tustanovskyy.taxi.repository.UserRepository;
 import com.tustanovskyy.taxi.security.JwtTokenUtil;
 import com.tustanovskyy.taxi.service.validatior.UserValidator;
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.Map;
 import java.util.Random;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -51,6 +56,18 @@ public class UserService {
     public User findByPhoneNumber(String phoneNumber) {
         return userRepository.findByPhoneNumber(phoneNumber)
                 .orElseThrow(() -> new ValidationException("User not found"));
+    }
+
+    /**
+     * Fetches multiple users in a single query, keyed by id. Used to avoid N+1 lookups
+     * when mapping lists of entities (e.g. chat participants) to responses.
+     */
+    public Map<String, User> findUsersByIds(Collection<String> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return Map.of();
+        }
+        return StreamSupport.stream(userRepository.findAllById(userIds).spliterator(), false)
+                .collect(Collectors.toMap(User::getId, Function.identity()));
     }
 
     public LoginResponse validateCode(String code, String phoneNumber) {

@@ -29,9 +29,10 @@ public class ChatResources {
     }
 
     @GetMapping
-    public List<ChatResponse> getUserChats(@AuthenticationPrincipal String phoneNumber) {
-        log.info("Getting chats for user: {}", phoneNumber);
-        return chatService.getUserChats(phoneNumber);
+    public List<ChatResponse> getUserChats(@RequestParam(required = false) String rideId,
+                                          @AuthenticationPrincipal String phoneNumber) {
+        log.info("Getting chats for user: {}, ride: {}", phoneNumber, rideId);
+        return chatService.getUserChats(phoneNumber, rideId);
     }
 
     @PostMapping("/{chatId}/messages")
