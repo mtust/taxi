@@ -7,6 +7,7 @@ import com.tustanovskyy.taxi.domain.request.ChatRequest;
 import com.tustanovskyy.taxi.domain.request.MessageRequest;
 import com.tustanovskyy.taxi.domain.response.ChatResponse;
 import com.tustanovskyy.taxi.domain.response.MessageResponse;
+import com.tustanovskyy.taxi.exception.ErrorCode;
 import com.tustanovskyy.taxi.exception.ValidationException;
 import com.tustanovskyy.taxi.repository.ChatRepository;
 import com.tustanovskyy.taxi.repository.MessageRepository;
@@ -84,11 +85,12 @@ public class ChatService {
     public MessageResponse sendMessage(String chatId, MessageRequest request, String senderPhone) {
         var sender = userService.findByPhoneNumber(senderPhone);
         var chat = chatRepository.findById(chatId)
-                .orElseThrow(() -> new ValidationException("Chat not found: " + chatId));
+                .orElseThrow(() -> new ValidationException(ErrorCode.CHAT_NOT_FOUND, "Chat not found: " + chatId,
+                        Map.of("chatId", chatId)));
 
         // Verify sender is participant
         if (!chat.getParticipantIds().contains(sender.getId())) {
-            throw new ValidationException("User is not a participant in this chat");
+            throw new ValidationException(ErrorCode.NOT_CHAT_PARTICIPANT, "User is not a participant in this chat");
         }
 
         var message = Message.builder()
@@ -128,11 +130,12 @@ public class ChatService {
     public List<MessageResponse> getChatMessages(String chatId, String userPhone, int page, int size) {
         var user = userService.findByPhoneNumber(userPhone);
         var chat = chatRepository.findById(chatId)
-                .orElseThrow(() -> new ValidationException("Chat not found: " + chatId));
+                .orElseThrow(() -> new ValidationException(ErrorCode.CHAT_NOT_FOUND, "Chat not found: " + chatId,
+                        Map.of("chatId", chatId)));
 
         // Verify user is participant
         if (!chat.getParticipantIds().contains(user.getId())) {
-            throw new ValidationException("User is not a participant in this chat");
+            throw new ValidationException(ErrorCode.NOT_CHAT_PARTICIPANT, "User is not a participant in this chat");
         }
 
         Pageable pageable = PageRequest.of(page, size);

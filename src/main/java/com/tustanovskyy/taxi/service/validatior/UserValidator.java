@@ -3,6 +3,7 @@ package com.tustanovskyy.taxi.service.validatior;
 import com.tustanovskyy.taxi.document.User;
 import com.tustanovskyy.taxi.domain.request.RecoveryPasswordRequest;
 import com.tustanovskyy.taxi.domain.request.SignUpRequest;
+import com.tustanovskyy.taxi.exception.ErrorCode;
 import com.tustanovskyy.taxi.repository.UserRepository;
 import java.time.LocalDateTime;
 import com.tustanovskyy.taxi.service.SmsService;
@@ -23,20 +24,24 @@ public class UserValidator extends BaseValidator{
     private Integer validationCodeActiveTime;
 
     public void validateSignUpRequest(SignUpRequest request) {
-        validate(() -> request.getPassword().equals(request.getPasswordRetry()), "Passwords do not match");
-        validate(() -> StringUtils.isNotEmpty(request.getPhoneNumber()), "Phone number is empty");
+        validate(() -> request.getPassword().equals(request.getPasswordRetry()),
+                ErrorCode.PASSWORDS_DO_NOT_MATCH, "Passwords do not match");
+        validate(() -> StringUtils.isNotEmpty(request.getPhoneNumber()),
+                ErrorCode.PHONE_NUMBER_EMPTY, "Phone number is empty");
         validate(() -> userRepository.findByPhoneNumber(request.getPhoneNumber()).isEmpty(),
-                "User with this phone number already exists");
+                ErrorCode.USER_ALREADY_EXISTS, "User with this phone number already exists");
     }
 
     public void validateLogin(User user, String password, PasswordEncoder passwordEncoder) {
-        validate(user::isRegistrationCompleted, "Phone number not verified");
-        validate(() -> passwordEncoder.matches(password, user.getPassword()), "Invalid password");
+        validate(user::isRegistrationCompleted, ErrorCode.PHONE_NOT_VERIFIED, "Phone number not verified");
+        validate(() -> passwordEncoder.matches(password, user.getPassword()),
+                ErrorCode.INVALID_PASSWORD, "Invalid password");
     }
 
     public void validateRecoveryPasswordRequest(RecoveryPasswordRequest request) {
-        validate(() -> request.getPassword().equals(request.getPasswordRetry()), "Passwords do not match");
+        validate(() -> request.getPassword().equals(request.getPasswordRetry()),
+                ErrorCode.PASSWORDS_DO_NOT_MATCH, "Passwords do not match");
         validate(() -> smsService.checkVerification(request.getPhoneNumber(),
-                request.getCode()), "Invalid verification code");
+                request.getCode()), ErrorCode.INVALID_VERIFICATION_CODE, "Invalid verification code");
     }
 }

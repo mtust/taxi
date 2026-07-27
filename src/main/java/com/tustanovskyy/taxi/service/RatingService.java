@@ -3,6 +3,7 @@ package com.tustanovskyy.taxi.service;
 import com.tustanovskyy.taxi.document.Rating;
 import com.tustanovskyy.taxi.domain.request.RatingRequest;
 import com.tustanovskyy.taxi.domain.response.RatingResponse;
+import com.tustanovskyy.taxi.exception.ErrorCode;
 import com.tustanovskyy.taxi.exception.ValidationException;
 import com.tustanovskyy.taxi.repository.RatingRepository;
 import com.tustanovskyy.taxi.repository.UserRepository;
@@ -25,10 +26,10 @@ public class RatingService {
         var rater = userService.findByPhoneNumber(phoneNumber);
 
         if (ratingRepository.existsByRaterIdAndRideId(rater.getId(), request.getRideId())) {
-            throw new ValidationException("You have already rated this ride");
+            throw new ValidationException(ErrorCode.ALREADY_RATED, "You have already rated this ride");
         }
         if (request.getScore() < 1 || request.getScore() > 5) {
-            throw new ValidationException("Score must be between 1 and 5");
+            throw new ValidationException(ErrorCode.INVALID_RATING_SCORE, "Score must be between 1 and 5");
         }
 
         var rating = Rating.builder()

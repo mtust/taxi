@@ -1,14 +1,29 @@
 package com.tustanovskyy.taxi.exception;
 
+import java.util.Map;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
-@ResponseStatus(HttpStatus.BAD_REQUEST)
+/**
+ * Base exception for expected business-rule failures (validation, not-found, access-denied,
+ * conflicts, etc). Carries an {@link ErrorCode} that determines both the HTTP status and the
+ * key the FE uses to show a localized message - see {@link GlobalExceptionHandler}.
+ */
+@Getter
 @Slf4j
 public class ValidationException extends RuntimeException {
-    public ValidationException(String message) {
+
+    private final ErrorCode code;
+    private final Map<String, Object> params;
+
+    public ValidationException(ErrorCode code, String message) {
+        this(code, message, Map.of());
+    }
+
+    public ValidationException(ErrorCode code, String message, Map<String, Object> params) {
         super(message);
-        log.error(message, this.getCause());
+        this.code = code;
+        this.params = params == null ? Map.of() : params;
+        log.error(message);
     }
 }

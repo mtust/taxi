@@ -1,34 +1,47 @@
 package com.tustanovskyy.taxi.exception;
 
+import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(SmsRateLimitException.class)
-    public ResponseEntity<ErrorResponse> handleSmsRateLimitException(SmsRateLimitException ex) {
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<ErrorResponse> handleValidationException(ValidationException ex) {
+        Long retryAfterSeconds = null;
+        Object rawRetryAfter = ex.getParams().get("retryAfterSeconds");
+        if (rawRetryAfter instanceof Number number) {
+            retryAfterSeconds = number.longValue();
+        }
+
         ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.TOO_MANY_REQUESTS.value(),
+                ex.getCode().getHttpStatus().value(),
                 ex.getMessage(),
                 System.currentTimeMillis(),
-                ex.getRetryAfterSeconds()
+                retryAfterSeconds,
+                ex.getCode().name(),
+                ex.getParams()
         );
-        return new ResponseEntity<>(errorResponse, HttpStatus.TOO_MANY_REQUESTS);
+        return new ResponseEntity<>(errorResponse, ex.getCode().getHttpStatus());
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception ex) {
-        // Custom error response body
+        log.error("Unhandled exception", ex);
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 ex.getMessage(),
-                System.currentTimeMillis()
+                System.currentTimeMillis(),
+                null,
+                ErrorCode.INTERNAL_ERROR.name(),
+                Map.of()
         );
 
-        // Return the custom error response
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

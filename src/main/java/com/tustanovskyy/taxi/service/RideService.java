@@ -7,6 +7,7 @@ import com.tustanovskyy.taxi.domain.RideDetails;
 import com.tustanovskyy.taxi.domain.Sex;
 import com.tustanovskyy.taxi.domain.request.RideRequest;
 import com.tustanovskyy.taxi.domain.response.RideResponse;
+import com.tustanovskyy.taxi.exception.ErrorCode;
 import com.tustanovskyy.taxi.exception.ValidationException;
 import com.tustanovskyy.taxi.mapper.RideMapper;
 import com.tustanovskyy.taxi.repository.RideRepository;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +46,9 @@ public class RideService {
         String userId = user.getId();
         if (!rideRepository.findByUserIdAndIsActiveOrderByDateDesc(userId, true).isEmpty()) {
             log.error("user {} already have active rides", userId);
-            throw new ValidationException("user " + user.getFirstName() + " " + user.getLastName() + " already have active rides. Please cancel active ride");
+            throw new ValidationException(ErrorCode.USER_HAS_ACTIVE_RIDE,
+                    "user " + user.getFirstName() + " " + user.getLastName() + " already have active rides. Please cancel active ride",
+                    Map.of("firstName", user.getFirstName(), "lastName", user.getLastName()));
         }
         Ride rideDocument = rideMapper.rideDtoToRide(ride);
         rideDocument.setUserId(userId);
@@ -84,7 +88,8 @@ public class RideService {
     public RideDetails findRide(String rideId) {
         return rideRepository.findById(new ObjectId(rideId))
                 .map(ride -> rideMapper.rideToRideDetailsDto(ride, userService.findUser(ride.getUserId())))
-                .orElseThrow(() -> new ValidationException("ride " + rideId + " not found"));
+                .orElseThrow(() -> new ValidationException(ErrorCode.RIDE_NOT_FOUND, "ride " + rideId + " not found",
+                        Map.of("rideId", rideId)));
     }
 
     public Collection<RideResponse> findRidesByUserAndStatus(String userId, Boolean isActive) {
@@ -110,7 +115,8 @@ public class RideService {
 
     public Ride getRide(String id) {
         return rideRepository.findById(new ObjectId(id))
-                .orElseThrow(() -> new ValidationException("ride " + id + " not found"));
+                .orElseThrow(() -> new ValidationException(ErrorCode.RIDE_NOT_FOUND, "ride " + id + " not found",
+                        Map.of("rideId", id)));
     }
 
     private List<Ride> findByPlaceToCoordinatesNear(Place place) {
@@ -156,7 +162,7 @@ public class RideService {
         User user = userService.findByPhoneNumber(phoneNumber);
         Ride ride = getRide(rideId);
         if (!ride.getUserId().equals(user.getId())) {
-            throw new ValidationException("Access denied");
+            throw new ValidationException(ErrorCode.ACCESS_DENIED, "Access denied");
         }
         ride.setAgreedPartnerUserId(partnerUserId);
         return rideMapper.rideToRideDto(rideRepository.save(ride));
@@ -167,7 +173,7 @@ public class RideService {
         User user = userService.findByPhoneNumber(phoneNumber);
         Ride ride = getRide(rideId);
         if (!ride.getUserId().equals(user.getId())) {
-            throw new ValidationException("Access denied");
+            throw new ValidationException(ErrorCode.ACCESS_DENIED, "Access denied");
         }
         ride.setIsActive(false);
         ride.setIsCompleted(true);

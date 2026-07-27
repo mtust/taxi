@@ -7,6 +7,7 @@ import com.tustanovskyy.taxi.domain.request.EditUserRequest;
 import com.tustanovskyy.taxi.domain.request.RecoveryPasswordRequest;
 import com.tustanovskyy.taxi.domain.request.SignUpRequest;
 import com.tustanovskyy.taxi.domain.response.LoginResponse;
+import com.tustanovskyy.taxi.exception.ErrorCode;
 import com.tustanovskyy.taxi.exception.SmsRateLimitException;
 import com.tustanovskyy.taxi.exception.ValidationException;
 import com.tustanovskyy.taxi.mapper.RideMapper;
@@ -50,12 +51,12 @@ public class UserService {
 
     public User findUser(String userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new ValidationException("User not found"));
+                .orElseThrow(() -> new ValidationException(ErrorCode.USER_NOT_FOUND, "User not found"));
     }
 
     public User findByPhoneNumber(String phoneNumber) {
         return userRepository.findByPhoneNumber(phoneNumber)
-                .orElseThrow(() -> new ValidationException("User not found"));
+                .orElseThrow(() -> new ValidationException(ErrorCode.USER_NOT_FOUND, "User not found"));
     }
 
     /**
@@ -72,7 +73,9 @@ public class UserService {
 
     public LoginResponse validateCode(String code, String phoneNumber) {
         User user = getUserByPhoneNumber(phoneNumber);
-        smsService.checkVerification(phoneNumber, code);
+        if (!smsService.checkVerification(phoneNumber, code)) {
+            throw new ValidationException(ErrorCode.INVALID_VERIFICATION_CODE, "Invalid verification code");
+        }
 
         if (!user.isRegistrationCompleted()) {
             user.setRegistrationCompleted(true);
@@ -114,14 +117,14 @@ public class UserService {
 
     public User getUserByPhoneNumber(String phoneNumber) {
         return userRepository.findByPhoneNumber(phoneNumber)
-                .orElseThrow(() -> new ValidationException("User not found"));
+                .orElseThrow(() -> new ValidationException(ErrorCode.USER_NOT_FOUND, "User not found"));
     }
 
     public User addHomeAddress(Place homeAddress, String phoneNumber) {
         return userRepository.findByPhoneNumber(phoneNumber)
                 .map(user -> user.setHomeAddress(rideMapper.placeDtoToPlace(homeAddress)))
                 .map(userRepository::save)
-                .orElseThrow(() -> new RuntimeException("failed to add home address"));
+                .orElseThrow(() -> new ValidationException(ErrorCode.ADD_HOME_ADDRESS_FAILED, "failed to add home address"));
     }
 
     public void sendUserPhoneVerification(String phoneNumber) {
@@ -163,7 +166,7 @@ public class UserService {
     public void checkAccess(String phoneNumber, String userId) {
         var currentUser = this.getUserByPhoneNumber(phoneNumber);
         if (!currentUser.getId().equals(userId) || Role.ADMIN.equals(currentUser.getRole())) {
-            throw new ValidationException("Access denied");
+            throw new ValidationException(ErrorCode.ACCESS_DENIED, "Access denied");
         }
     }
 }
