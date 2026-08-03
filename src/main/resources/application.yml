@@ -36,3 +36,7 @@ taxi:
     code:
       active:
         minutes: 1
+    deletion:
+      # Days a soft-deleted account (and its rides/chats/messages/ratings) is retained before
+      # being permanently purged - see UserService#purgeDeletedAccounts.
+      retention-days: 30

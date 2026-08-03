@@ -10,20 +10,29 @@ import com.tustanovskyy.taxi.domain.response.LoginResponse;
 import com.tustanovskyy.taxi.exception.ErrorCode;
 import com.tustanovskyy.taxi.exception.SmsRateLimitException;
 import com.tustanovskyy.taxi.exception.ValidationException;
+import com.tustanovskyy.taxi.document.Chat;
 import com.tustanovskyy.taxi.mapper.RideMapper;
 import com.tustanovskyy.taxi.mapper.UserMapper;
+import com.tustanovskyy.taxi.repository.ChatRepository;
+import com.tustanovskyy.taxi.repository.MessageRepository;
+import com.tustanovskyy.taxi.repository.RatingRepository;
+import com.tustanovskyy.taxi.repository.RideRepository;
 import com.tustanovskyy.taxi.repository.UserRepository;
 import com.tustanovskyy.taxi.security.JwtTokenUtil;
 import com.tustanovskyy.taxi.service.validatior.UserValidator;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -40,6 +49,13 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenUtil jwtTokenUtil;
     private final UserValidator userValidator;
+    private final RideRepository rideRepository;
+    private final ChatRepository chatRepository;
+    private final MessageRepository messageRepository;
+    private final RatingRepository ratingRepository;
+
+    @Value("${taxi.user.deletion.retention-days:30}")
+    private int deletionRetentionDays;
 
     public User createUser(SignUpRequest user) {
         userValidator.validateSignUpRequest(user);
@@ -162,9 +178,75 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    /**
+     * Soft-deletes a user's account: identifying info (name, email, phone, password, home
+     * address) is wiped immediately and the account is flagged as deleted, which also blocks
+     * further login/use of the account since every authenticated request resolves the current
+     * user by the (now-changed) phone number. The account document itself, and their
+     * rides/chats/messages/ratings, are kept for a retention window ({@link #deletionRetentionDays}
+     * days) as a safety margin - e.g. in case the deletion was a mistake, coerced, or data is
+     * needed for an active dispute - and are permanently purged afterwards by
+     * {@link #purgeDeletedAccounts()}.
+     */
     public void deleteUser(String phoneNumber) {
         User user = this.getUserByPhoneNumber(phoneNumber);
-        userRepository.deleteById(user.getId());
+        String userId = user.getId();
+
+        user.setFirstName("Deleted");
+        user.setLastName("user");
+        user.setEmail(null);
+        user.setHomeAddress(null);
+        user.setPhoneNumber("deleted-" + userId);
+        user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
+        user.setSmsSentAt(null);
+        user.setDeleted(true);
+        user.setDeletedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        log.info("Soft-deleted user {}; identifying info wiped, full purge scheduled after {} days",
+                userId, deletionRetentionDays);
+    }
+
+    /**
+     * Permanently purges accounts that were soft-deleted more than {@link #deletionRetentionDays}
+     * days ago, along with every ride, chat, message, and rating tied to them - completing the
+     * deletion promised in the Privacy Policy once the safety retention window has elapsed.
+     */
+    @Scheduled(cron = "0 0 3 * * *")
+    public void purgeDeletedAccounts() {
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(deletionRetentionDays);
+        List<User> dueForPurge = userRepository.findByDeletedTrueAndDeletedAtBefore(cutoff);
+        if (dueForPurge.isEmpty()) {
+            return;
+        }
+        log.info("Purging {} account(s) soft-deleted before {}", dueForPurge.size(), cutoff);
+        dueForPurge.forEach(this::purgeUserData);
+    }
+
+    /**
+     * Not wrapped in {@code @Transactional} - it's invoked via self-reference from
+     * {@link #purgeDeletedAccounts()} so Spring's proxy wouldn't apply it anyway. Deletion order
+     * (rides/chats/messages/ratings, then the user document last) keeps this idempotent: if the
+     * job is interrupted partway through, the user document still matches the purge query on the
+     * next scheduled run and the remaining steps simply no-op/retry.
+     */
+    void purgeUserData(User user) {
+        String userId = user.getId();
+
+        rideRepository.deleteAll(rideRepository.findByUserId(userId));
+
+        List<Chat> chats = chatRepository.findByParticipantIdsContaining(userId);
+        if (!chats.isEmpty()) {
+            List<String> chatIds = chats.stream().map(Chat::getId).toList();
+            messageRepository.deleteByChatIdIn(chatIds);
+            chatRepository.deleteAll(chats);
+        }
+
+        ratingRepository.deleteByRaterId(userId);
+        ratingRepository.deleteByRatedUserId(userId);
+
+        userRepository.deleteById(userId);
+        log.info("Purged user {} and their remaining rides/chats/messages/ratings", userId);
     }
 
     public void checkAccess(String phoneNumber, String userId) {

@@ -13,6 +13,12 @@ public interface ChatRepository extends MongoRepository<Chat, String> {
 
     List<Chat> findByParticipantIdsContainingAndIsActive(String participantId, boolean isActive);
 
+    /**
+     * Every chat a user is part of, active or not - used to purge a user's data once their
+     * soft-deleted account's retention window has elapsed (see UserService#purgeUserData).
+     */
+    List<Chat> findByParticipantIdsContaining(String participantId);
+
     List<Chat> findByRideIdAndParticipantIdsContainingAndIsActive(String rideId, String participantId, boolean isActive);
 
     /**

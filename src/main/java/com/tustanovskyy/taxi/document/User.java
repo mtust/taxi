@@ -70,4 +70,15 @@ public class User {
     private Double averageRating;
     private Integer ratingCount;
 
+    /**
+     * Soft-delete flag set when the user requests account deletion. Their identifying info
+     * (name/email/phone/password/home address) is wiped immediately, but the document itself -
+     * and their rides/chats/messages/ratings - are only hard-deleted after a retention window
+     * (see UserService#purgeDeletedAccounts), giving a safety margin before data is unrecoverable.
+     */
+    private boolean deleted;
+
+    @JsonIgnore
+    private LocalDateTime deletedAt;
+
 }

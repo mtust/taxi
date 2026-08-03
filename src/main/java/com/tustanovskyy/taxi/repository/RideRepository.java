@@ -28,6 +28,12 @@ public interface RideRepository extends MongoRepository<Ride, ObjectId> {
 
     Collection<Ride> findByUserIdAndIsActiveOrderByDateDesc(String userId, Boolean isActive);
 
+    /**
+     * All rides ever created by a user, regardless of status - used to purge a user's data once
+     * their soft-deleted account's retention window has elapsed (see UserService#purgeUserData).
+     */
+    List<Ride> findByUserId(String userId);
+
     List<Ride> findByIsActiveTrueAndDateBefore(LocalDateTime date);
 
     @Query("""
