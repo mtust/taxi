@@ -7,7 +7,12 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.WARN)
+/**
+ * {@code uses = RideMapper.class} lets MapStruct reuse {@link RideMapper#placeToPlaceDto} to
+ * convert {@code User.homeAddress} (document {@code Place}, GeoJSON-backed) into the domain
+ * {@code Place} exposed on {@link UserResponse}.
+ */
+@Mapper(componentModel = "spring", uses = RideMapper.class, unmappedTargetPolicy = ReportingPolicy.WARN)
 public interface UserMapper {
 
     @Mapping(target = "password", ignore = true)

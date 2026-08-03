@@ -1,5 +1,6 @@
 package com.tustanovskyy.taxi.domain.response;
 
+import com.tustanovskyy.taxi.domain.Place;
 import com.tustanovskyy.taxi.domain.Sex;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,4 +21,9 @@ public class UserResponse {
     private String language;
     private Double averageRating;
     private Integer ratingCount;
+    /**
+     * Included so the FE can offer a "use my home address" quick-fill shortcut for ride
+     * pickup/drop-off without an extra round-trip to {@code GET /users/{id}}.
+     */
+    private Place homeAddress;
 }
