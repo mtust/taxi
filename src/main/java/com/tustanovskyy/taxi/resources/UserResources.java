@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -42,8 +43,16 @@ public class UserResources {
         userService.deleteUser(phoneNumber);
     }
 
+    /**
+     * Takes a JSON body rather than the implicit @ModelAttribute (query-param) binding used
+     * elsewhere in this controller: Place.point is a org.springframework.data.geo.Point, which
+     * has no default constructor, so Spring's data binder can't auto-instantiate it to bind
+     * nested "point.x"/"point.y" request params - it fails with "Could not instantiate property
+     * type ... to auto-grow nested property path". @RequestBody uses Jackson instead, which
+     * handles this fine.
+     */
     @PostMapping("home-address")
-    public User addHomeAddress(Place homeAddress, @AuthenticationPrincipal String phoneNumber) {
+    public User addHomeAddress(@RequestBody Place homeAddress, @AuthenticationPrincipal String phoneNumber) {
         return userService.addHomeAddress(homeAddress, phoneNumber);
     }
 
