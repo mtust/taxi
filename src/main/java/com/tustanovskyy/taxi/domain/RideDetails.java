@@ -24,4 +24,9 @@ public class RideDetails {
     private UserResponse user;
     private boolean searchOnlyFrom;
     private Integer passengerCount;
+
+    // Plain ISO-8601 (no @JsonFormat) so the FE can do date arithmetic (countdowns, re-scheduling).
+    private LocalDateTime scheduledFrom;
+    private LocalDateTime scheduledTo;
+    private Boolean isScheduled;
 }

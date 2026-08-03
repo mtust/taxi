@@ -32,6 +32,11 @@ taxi:
   ride:
     active:
       minutes: 30
+    schedule:
+      # How far in advance a ride can be scheduled - see RideService#createRide.
+      max-advance-hours: 24
+      # Maximum length of a scheduled ride's search window (e.g. 21:00-22:00 = 60 min).
+      max-window-minutes: 60
   user:
     code:
       active:

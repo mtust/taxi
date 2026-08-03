@@ -16,9 +16,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document
 @CompoundIndexes({
     @CompoundIndex(name = "ride_user_active_date", def = "{'userId': 1, 'isActive': 1, 'date': -1}"),
-    @CompoundIndex(name = "ride_active_date", def = "{'isActive': 1, 'date': 1}"),
-    @CompoundIndex(name = "ride_from_geo", def = "{'placeFrom.coordinates': '2dsphere', 'isActive': 1, 'date': 1}"),
-    @CompoundIndex(name = "ride_to_geo", def = "{'placeTo.coordinates': '2dsphere', 'isActive': 1, 'date': 1}")
+    @CompoundIndex(name = "ride_active_scheduled_to", def = "{'isActive': 1, 'scheduledTo': 1}"),
+    @CompoundIndex(name = "ride_from_geo", def = "{'placeFrom.coordinates': '2dsphere', 'isActive': 1, 'scheduledTo': 1}"),
+    @CompoundIndex(name = "ride_to_geo", def = "{'placeTo.coordinates': '2dsphere', 'isActive': 1, 'scheduledTo': 1}")
 })
 @Data
 @NoArgsConstructor
@@ -40,5 +40,17 @@ public class Ride {
     private Integer passengerCount;
     private String agreedPartnerUserId;
     private Boolean isCompleted;
+
+    /**
+     * Start/end of the window this ride is searching a partner for. For an immediate ("now")
+     * ride this is {@code date}..{@code date + taxi.ride.active.minutes}. For a user-scheduled
+     * ride it's the picked slot (max {@code taxi.ride.schedule.max-window-minutes} wide, starting
+     * at most {@code taxi.ride.schedule.max-advance-hours} from now). Two rides are only offered
+     * to each other as partners when these windows overlap - see RideService#schedulesOverlap.
+     */
+    private LocalDateTime scheduledFrom;
+    private LocalDateTime scheduledTo;
+    /** True only when the user explicitly picked a future slot, for FE display purposes. */
+    private Boolean isScheduled;
 
 }

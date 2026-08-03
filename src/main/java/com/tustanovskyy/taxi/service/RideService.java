@@ -11,12 +11,12 @@ import com.tustanovskyy.taxi.exception.ErrorCode;
 import com.tustanovskyy.taxi.exception.ValidationException;
 import com.tustanovskyy.taxi.mapper.RideMapper;
 import com.tustanovskyy.taxi.repository.RideRepository;
+import com.tustanovskyy.taxi.service.validatior.RideValidator;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,8 +37,13 @@ public class RideService {
     private final RideRepository rideRepository;
     private final UserService userService;
     private final RideMapper rideMapper;
+    private final RideValidator rideValidator;
     @Value("${taxi.ride.active.minutes}")
     private Integer activeRideTime;
+    @Value("${taxi.ride.schedule.max-advance-hours}")
+    private Integer maxScheduleAdvanceHours;
+    @Value("${taxi.ride.schedule.max-window-minutes}")
+    private Integer maxScheduleWindowMinutes;
 
     @Transactional
     public RideResponse createRide(RideRequest ride, String phoneNumber) {
@@ -53,6 +58,20 @@ public class RideService {
         Ride rideDocument = rideMapper.rideDtoToRide(ride);
         rideDocument.setUserId(userId);
         rideDocument.setIsActive(true);
+
+        LocalDateTime now = LocalDateTime.now();
+        boolean scheduled = ride.getScheduledFrom() != null || ride.getScheduledTo() != null;
+        if (scheduled) {
+            rideValidator.validateSchedule(ride.getScheduledFrom(), ride.getScheduledTo(),
+                    maxScheduleAdvanceHours, maxScheduleWindowMinutes);
+            rideDocument.setScheduledFrom(ride.getScheduledFrom());
+            rideDocument.setScheduledTo(ride.getScheduledTo());
+            rideDocument.setIsScheduled(true);
+        } else {
+            rideDocument.setScheduledFrom(now);
+            rideDocument.setScheduledTo(now.plusMinutes(activeRideTime));
+            rideDocument.setIsScheduled(false);
+        }
         log.info("ride to store: {}", rideDocument);
         return rideMapper.rideToRideDto(rideRepository.save(rideDocument));
     }
@@ -80,8 +99,26 @@ public class RideService {
                 .filter(rideFrom -> onlyFromPartner || ridesTo.contains(rideFrom))
                 .filter(rideFrom -> !rideFrom.getId().equals(currentRide.getId()))
                 .filter(rideFrom -> !sameSex || getRideSex(rideFrom).equals(getRideSex(currentRide)))
+                .filter(rideFrom -> schedulesOverlap(rideFrom, currentRide))
                 .map(ride -> rideMapper.rideToRideDetailsDto(ride, userService.findUser(ride.getUserId())))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Two rides are only realistic partners if the windows they're searching for a ride in
+     * actually overlap - e.g. a ride scheduled for 21:00-22:00 shouldn't be matched with one
+     * scheduled for 09:00-10:00 tomorrow. Rides without a window (shouldn't happen for anything
+     * created after this feature shipped, but guards old data) are treated as always overlapping.
+     */
+    private boolean schedulesOverlap(Ride a, Ride b) {
+        LocalDateTime aFrom = a.getScheduledFrom();
+        LocalDateTime aTo = a.getScheduledTo();
+        LocalDateTime bFrom = b.getScheduledFrom();
+        LocalDateTime bTo = b.getScheduledTo();
+        if (aFrom == null || aTo == null || bFrom == null || bTo == null) {
+            return true;
+        }
+        return aFrom.isBefore(bTo) && bFrom.isBefore(aTo);
     }
 
     @Transactional
@@ -104,10 +141,10 @@ public class RideService {
 
     @Scheduled(fixedRate = 60000)
     public void deactivateOldRides() {
-        LocalDateTime timeToDeactivateRuns = LocalDateTime.now().minusMinutes(activeRideTime);
-        List<Ride> oldRides = rideRepository.findByIsActiveTrueAndDateBefore(timeToDeactivateRuns);
+        LocalDateTime now = LocalDateTime.now();
+        List<Ride> oldRides = rideRepository.findByIsActiveTrueAndScheduledToBefore(now);
         if (!oldRides.isEmpty()) {
-            log.info("Deactivating {} old rides created before {}", oldRides.size(), timeToDeactivateRuns);
+            log.info("Deactivating {} rides whose search window ended before {}", oldRides.size(), now);
             oldRides.forEach(ride -> ride.setIsActive(false));
             rideRepository.saveAll(oldRides);
         }
@@ -120,9 +157,9 @@ public class RideService {
     }
 
     private List<Ride> findByPlaceToCoordinatesNear(Place place) {
-        return rideRepository.findByIsActiveAndDateAfterAndPlaceToCoordinatesNear(
+        return rideRepository.findByIsActiveAndScheduledToAfterAndPlaceToCoordinatesNear(
                 true,
-                LocalDateTime.now().minusMinutes(activeRideTime),
+                LocalDateTime.now(),
                 new GeoJsonPoint(place.getCoordinates().getX(),
                         place.getCoordinates().getY()),
                 new Distance((double) place.getDistance() / 1000,
@@ -130,27 +167,13 @@ public class RideService {
     }
 
     private List<Ride> findByPlaceFromCoordinatesNear(Place place) {
-        return rideRepository.findByIsActiveAndDateAfterAndPlaceFromCoordinatesNear(
+        return rideRepository.findByIsActiveAndScheduledToAfterAndPlaceFromCoordinatesNear(
                 true,
-                LocalDateTime.now().minusMinutes(activeRideTime),
+                LocalDateTime.now(),
                 new GeoJsonPoint(place.getCoordinates().getX(),
                         place.getCoordinates().getY()),
                 new Distance((double) place.getDistance() / 1000,
                         Metrics.KILOMETERS));
-    }
-
-    private List<Ride> findByPlaceCoordinatesToNear(Place place) {
-        return rideRepository.findActiveByToCoordinatesNear(true,
-                LocalDateTime.now().minusMinutes(activeRideTime),
-                place.getCoordinates(),
-                (double) place.getDistance());
-    }
-
-    private List<Ride> findByPlaceCoordinatesFromNear(Place place) {
-        return rideRepository.findActiveByFromCoordinatesNear(true,
-                LocalDateTime.now().minusMinutes(activeRideTime),
-                place.getCoordinates(),
-                (double) place.getDistance());
     }
 
     private Sex getRideSex(Ride ride) {
