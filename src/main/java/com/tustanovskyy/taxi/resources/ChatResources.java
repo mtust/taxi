@@ -7,9 +7,11 @@ import com.tustanovskyy.taxi.domain.response.MessageResponse;
 import com.tustanovskyy.taxi.service.ChatService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -30,9 +32,13 @@ public class ChatResources {
 
     @GetMapping
     public List<ChatResponse> getUserChats(@RequestParam(required = false) String rideId,
+                                          @RequestParam(defaultValue = "0") int page,
+                                          @RequestParam(defaultValue = "10") int size,
                                           @AuthenticationPrincipal String phoneNumber) {
-        log.info("Getting chats for user: {}, ride: {}", phoneNumber, rideId);
-        return chatService.getUserChats(phoneNumber, rideId);
+        // Polled every 10s by the app-wide notification listener plus fetched on every inbox
+        // screen focus, so log at debug rather than flooding INFO-level logs.
+        log.debug("Getting chats for user: {}, ride: {}, page: {}, size: {}", phoneNumber, rideId, page, size);
+        return chatService.getUserChats(phoneNumber, rideId, page, size);
     }
 
     @PostMapping("/{chatId}/messages")
@@ -46,10 +52,12 @@ public class ChatResources {
     @GetMapping("/{chatId}/messages")
     public List<MessageResponse> getChatMessages(@PathVariable String chatId,
                                                @RequestParam(defaultValue = "0") int page,
-                                               @RequestParam(defaultValue = "50") int size,
+                                               @RequestParam(defaultValue = "10") int size,
+                                               @RequestParam(required = false)
+                                               @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime since,
                                                @AuthenticationPrincipal String phoneNumber) {
-        log.info("Getting messages for chat: {} by user: {}", chatId, phoneNumber);
-        return chatService.getChatMessages(chatId, phoneNumber, page, size);
+        log.debug("Getting messages for chat: {} by user: {} since: {}", chatId, phoneNumber, since);
+        return chatService.getChatMessages(chatId, phoneNumber, page, size, since);
     }
 
     @PutMapping("/{chatId}/messages/read")

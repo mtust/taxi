@@ -17,7 +17,12 @@ import java.util.List;
 
 @Document
 @CompoundIndexes({
-    @CompoundIndex(name = "chat_participants_active", def = "{'participantIds': 1, 'isActive': 1}"),
+    // Covers the paginated/sorted inbox query (participantIds + isActive filter, sorted by
+    // lastMessageDate desc) so pagination doesn't require an in-memory sort as chat counts grow.
+    // Replaces the old "chat_participants_active" index. Spring Data's auto-index-creation only
+    // ensures declared indexes exist, it doesn't drop ones that are no longer declared - the old
+    // index becomes redundant after deploy and should be dropped manually in Atlas.
+    @CompoundIndex(name = "chat_participants_active_lastmsg", def = "{'participantIds': 1, 'isActive': 1, 'lastMessageDate': -1}"),
     @CompoundIndex(name = "chat_ride_active", def = "{'rideId': 1, 'isActive': 1}")
 })
 @Data

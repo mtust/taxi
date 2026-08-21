@@ -15,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -117,17 +116,21 @@ public class ChatService {
         return messageResponse;
     }
 
-    public List<ChatResponse> getUserChats(String userPhone, String rideId) {
+    public List<ChatResponse> getUserChats(String userPhone, String rideId, int page, int size) {
         var user = userService.findByPhoneNumber(userPhone);
 
+        // A ride's own chats are naturally bounded (one per partner pairing), so only the
+        // full inbox listing - which can grow to thousands of chats over a user's history -
+        // needs pagination.
         List<Chat> chats = (rideId != null && !rideId.isBlank())
                 ? chatRepository.findByRideIdAndParticipantIdsContainingAndIsActive(rideId, user.getId(), true)
-                : chatRepository.findByParticipantIdsContainingAndIsActive(user.getId(), true);
+                : chatRepository.findByParticipantIdsContainingAndIsActiveOrderByLastMessageDateDesc(
+                        user.getId(), true, PageRequest.of(page, size));
 
         return mapToChatResponses(chats, user.getId());
     }
 
-    public List<MessageResponse> getChatMessages(String chatId, String userPhone, int page, int size) {
+    public List<MessageResponse> getChatMessages(String chatId, String userPhone, int page, int size, LocalDateTime since) {
         var user = userService.findByPhoneNumber(userPhone);
         var chat = chatRepository.findById(chatId)
                 .orElseThrow(() -> new ValidationException(ErrorCode.CHAT_NOT_FOUND, "Chat not found: " + chatId,
@@ -138,8 +141,13 @@ public class ChatService {
             throw new ValidationException(ErrorCode.NOT_CHAT_PARTICIPANT, "User is not a participant in this chat");
         }
 
-        Pageable pageable = PageRequest.of(page, size);
-        var messages = messageRepository.findByChatIdOrderByTimestampDesc(chatId, pageable);
+        // The client polls this endpoint every few seconds while a chat is open. Once it has
+        // an initial page, it only needs messages newer than the last one it already has -
+        // `since` lets it fetch just that delta instead of re-fetching and re-serializing the
+        // same page of messages on every poll.
+        List<Message> messages = since != null
+                ? messageRepository.findByChatIdAndTimestampAfterOrderByTimestampAsc(chatId, since)
+                : messageRepository.findByChatIdOrderByTimestampDesc(chatId, PageRequest.of(page, size));
 
         Set<String> senderIds = messages.stream()
                 .map(Message::getSenderId)
