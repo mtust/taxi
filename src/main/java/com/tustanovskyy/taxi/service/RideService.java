@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -93,14 +94,26 @@ public class RideService {
 
         List<Ride> ridesTo = onlyFromPartner ? new ArrayList<>()
                 : findByPlaceToCoordinatesNear(currentRide.getPlaceTo());
+        Set<String> ridesToIds = ridesTo.stream().map(Ride::getId).collect(Collectors.toSet());
 
-        return ridesFrom
+        List<Ride> candidates = ridesFrom
                 .stream()
-                .filter(rideFrom -> onlyFromPartner || ridesTo.contains(rideFrom))
+                .filter(rideFrom -> onlyFromPartner || ridesToIds.contains(rideFrom.getId()))
                 .filter(rideFrom -> !rideFrom.getId().equals(currentRide.getId()))
                 .filter(rideFrom -> !sameSex || getRideSex(rideFrom).equals(getRideSex(currentRide)))
                 .filter(rideFrom -> schedulesOverlap(rideFrom, currentRide))
-                .map(ride -> rideMapper.rideToRideDetailsDto(ride, userService.findUser(ride.getUserId())))
+                .toList();
+
+        // Batch-fetch the candidates' users in one query instead of one findUser() call per
+        // candidate - this endpoint is polled every few seconds while a ride is searching for
+        // a partner, so an N+1 lookup here multiplies with the number of nearby candidate rides
+        // on every single poll.
+        Map<String, User> usersById = userService.findUsersByIds(
+                candidates.stream().map(Ride::getUserId).collect(Collectors.toSet()));
+
+        return candidates
+                .stream()
+                .map(ride -> rideMapper.rideToRideDetailsDto(ride, usersById.get(ride.getUserId())))
                 .collect(Collectors.toList());
     }
 

@@ -55,7 +55,9 @@ public class RideResource {
     public Collection<RideDetails> findPartners(@PathVariable String id,
                                                 @RequestParam("onlyFromPartner") boolean onlyFromPartner,
                                                 @AuthenticationPrincipal String phoneNumber) {
-        log.info("id: {}", id);
+        // This endpoint is polled every few seconds while a ride is searching for a partner -
+        // log at debug so it doesn't flood INFO-level logs under normal polling traffic.
+        log.debug("id: {}", id);
         Ride currentRide = rideService.getRide(id);
         userService.checkAccess(phoneNumber, currentRide.getUserId());
         return rideService.findPartnersRide(currentRide, onlyFromPartner);
