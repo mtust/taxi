@@ -37,7 +37,7 @@ public interface RideRepository extends MongoRepository<Ride, ObjectId> {
      * history screen pages through them instead of loading everything at once. Covered
      * end-to-end (filter + sort) by the "ride_user_active_date" compound index.
      */
-    Collection<Ride> findByUserIdAndIsActiveOrderByDateDesc(String userId, Boolean isActive, Pageable pageable);
+    List<Ride> findByUserIdAndIsActiveOrderByDateDesc(String userId, Boolean isActive, Pageable pageable);
 
     /**
      * All rides ever created by a user, regardless of status - used to purge a user's data once
