@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
@@ -142,9 +143,9 @@ public class RideService {
                         Map.of("rideId", rideId)));
     }
 
-    public Collection<RideResponse> findRidesByUserAndStatus(String userId, Boolean isActive) {
+    public Collection<RideResponse> findRidesByUserAndStatus(String userId, Boolean isActive, int page, int size) {
         return rideMapper.ridesToRideDto(rideRepository
-                .findByUserIdAndIsActiveOrderByDateDesc(userId, isActive));
+                .findByUserIdAndIsActiveOrderByDateDesc(userId, isActive, PageRequest.of(page, size)));
     }
 
     public void cancelRide(Ride ride) {

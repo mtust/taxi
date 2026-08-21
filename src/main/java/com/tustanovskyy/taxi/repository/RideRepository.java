@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import org.bson.types.ObjectId;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -30,6 +31,13 @@ public interface RideRepository extends MongoRepository<Ride, ObjectId> {
     Collection<Ride> findByIdAndIsActive(String id, Boolean isActive);
 
     Collection<Ride> findByUserIdAndIsActiveOrderByDateDesc(String userId, Boolean isActive);
+
+    /**
+     * Paginated ride history - a user's past rides can grow unbounded over time, so the
+     * history screen pages through them instead of loading everything at once. Covered
+     * end-to-end (filter + sort) by the "ride_user_active_date" compound index.
+     */
+    Collection<Ride> findByUserIdAndIsActiveOrderByDateDesc(String userId, Boolean isActive, Pageable pageable);
 
     /**
      * All rides ever created by a user, regardless of status - used to purge a user's data once

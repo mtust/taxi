@@ -66,9 +66,11 @@ public class RideResource {
     @GetMapping
     public Collection<RideResponse> ridesByUser(@RequestParam("userId") String userId,
                                                 @RequestParam("isActive") Boolean isActive,
+                                                @RequestParam(defaultValue = "0") int page,
+                                                @RequestParam(defaultValue = "10") int size,
                                                 @AuthenticationPrincipal String phoneNumber) {
         userService.checkAccess(phoneNumber, userId);
-        return rideService.findRidesByUserAndStatus(userId, isActive);
+        return rideService.findRidesByUserAndStatus(userId, isActive, page, size);
     }
 
     @DeleteMapping("/{id}")
