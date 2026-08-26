@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -65,18 +66,35 @@ public class ChatService {
         // The same two people always share one chat, regardless of which (possibly many, over
         // time) ride matched them together, and regardless of which side's own "start chat"
         // call happens to run first when both discover each other around the same time.
-        var chat = chatRepository.findActiveChatForParticipants(participantIds, participantIds.size(), true)
-                .orElseGet(() -> {
-                    var created = chatRepository.save(Chat.builder()
-                            .rideId(request.getRideId())
-                            .participantIds(participantIds)
-                            .createdDate(LocalDateTime.now())
-                            .lastMessageDate(LocalDateTime.now())
-                            .isActive(true)
-                            .build());
-                    log.info("Created chat: {}", created);
-                    return created;
-                });
+        var activeChats = chatRepository.findActiveChatsForParticipants(participantIds, participantIds.size(), true);
+
+        Chat chat;
+        if (activeChats.isEmpty()) {
+            chat = chatRepository.save(Chat.builder()
+                    .rideId(request.getRideId())
+                    .participantIds(participantIds)
+                    .createdDate(LocalDateTime.now())
+                    .lastMessageDate(LocalDateTime.now())
+                    .isActive(true)
+                    .build());
+            log.info("Created chat: {}", chat);
+        } else {
+            // Self-heals leftover duplicates from before chats were deduped by participant pair
+            // alone (previously scoped per-ride, so the same pair could accumulate one "active"
+            // chat per ride they'd ever matched on) - keep the most recently active one, retire
+            // the rest so this pair converges back onto a single chat going forward.
+            chat = activeChats.stream()
+                    .max(Comparator.comparing(Chat::getLastMessageDate))
+                    .orElseThrow();
+            for (Chat duplicate : activeChats) {
+                if (!duplicate.getId().equals(chat.getId())) {
+                    duplicate.setActive(false);
+                    chatRepository.save(duplicate);
+                    log.info("Deactivated duplicate chat {} for participants {} in favor of {}",
+                            duplicate.getId(), participantIds, chat.getId());
+                }
+            }
+        }
 
         announceRideMatchIfNew(chat, currentUser.getId(), request.getRideId(), participantIds);
 

@@ -7,7 +7,6 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface ChatRepository extends MongoRepository<Chat, String> {
@@ -33,7 +32,12 @@ public interface ChatRepository extends MongoRepository<Chat, String> {
      * ride matched them together - not scoped by rideId, so re-matching later reuses this same
      * conversation instead of starting a new one. An active chat is identified by the exact set
      * of participants.
+     *
+     * Returns a List, not a single Optional: chats created before this pairing-only dedup existed
+     * were scoped per-ride, so the same two people can have several still-"active" chats left
+     * over from matching on different rides in the past - see ChatService#createChat, which
+     * picks the most recent of these and deactivates the rest.
      */
     @Query("{ 'participantIds': { '$all': ?0, '$size': ?1 }, 'isActive': ?2 }")
-    Optional<Chat> findActiveChatForParticipants(List<String> participantIds, int participantCount, boolean isActive);
+    List<Chat> findActiveChatsForParticipants(List<String> participantIds, int participantCount, boolean isActive);
 } 
