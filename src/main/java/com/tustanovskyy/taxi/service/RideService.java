@@ -10,6 +10,7 @@ import com.tustanovskyy.taxi.domain.response.RideResponse;
 import com.tustanovskyy.taxi.exception.ErrorCode;
 import com.tustanovskyy.taxi.exception.ValidationException;
 import com.tustanovskyy.taxi.mapper.RideMapper;
+import com.tustanovskyy.taxi.repository.ChatRepository;
 import com.tustanovskyy.taxi.repository.RideRepository;
 import com.tustanovskyy.taxi.service.validatior.RideValidator;
 import java.time.LocalDateTime;
@@ -37,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class RideService {
 
     private final RideRepository rideRepository;
+    private final ChatRepository chatRepository;
     private final UserService userService;
     private final RideMapper rideMapper;
     private final RideValidator rideValidator;
@@ -112,9 +114,21 @@ public class RideService {
         Map<String, User> usersById = userService.findUsersByIds(
                 candidates.stream().map(Ride::getUserId).collect(Collectors.toSet()));
 
+        // Same reasoning: one batched lookup of all of the requester's active chats, checked
+        // per-candidate in memory, instead of a chat-existence query per candidate.
+        Set<String> chatPartnerIds = chatRepository.findByParticipantIdsContainingAndIsActive(currentRide.getUserId(), true)
+                .stream()
+                .flatMap(chat -> chat.getParticipantIds().stream())
+                .filter(id -> !id.equals(currentRide.getUserId()))
+                .collect(Collectors.toSet());
+
         return candidates
                 .stream()
-                .map(ride -> rideMapper.rideToRideDetailsDto(ride, usersById.get(ride.getUserId())))
+                .map(ride -> {
+                    RideDetails details = rideMapper.rideToRideDetailsDto(ride, usersById.get(ride.getUserId()));
+                    details.setHasChatWithMe(chatPartnerIds.contains(ride.getUserId()));
+                    return details;
+                })
                 .collect(Collectors.toList());
     }
 

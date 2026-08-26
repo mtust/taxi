@@ -26,6 +26,14 @@ public class RideDetails {
     private Integer passengerCount;
     private String agreedPartnerUserId;
 
+    /**
+     * Whether the ride's OWNER already has an active chat with the caller of this endpoint -
+     * only ever populated by RideService#findPartnersRide (the only place that knows who "the
+     * caller" is), and only meaningful there; defaults to false elsewhere (e.g. GET /rides/{id},
+     * which has no caller-relative context).
+     */
+    private boolean hasChatWithMe;
+
     // Plain ISO-8601 (no @JsonFormat) so the FE can do date arithmetic (countdowns, re-scheduling).
     private LocalDateTime scheduledFrom;
     private LocalDateTime scheduledTo;

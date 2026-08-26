@@ -20,6 +20,13 @@ public interface ChatRepository extends MongoRepository<Chat, String> {
             String participantId, boolean isActive, Pageable pageable);
 
     /**
+     * Unpaginated - used to check "do I already have a chat with each of these candidates"
+     * against a user's full set of active chats (see RideService#findPartnersRide), not to
+     * render a list, so there's no page to size.
+     */
+    List<Chat> findByParticipantIdsContainingAndIsActive(String participantId, boolean isActive);
+
+    /**
      * Every chat a user is part of, active or not - used to purge a user's data once their
      * soft-deleted account's retention window has elapsed (see UserService#purgeUserData).
      */
