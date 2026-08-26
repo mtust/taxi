@@ -23,8 +23,16 @@ public interface MessageRepository extends MongoRepository<Message, String> {
     List<Message> findByChatIdAndTimestampAfterOrderByTimestampAsc(String chatId, LocalDateTime since);
 
     int countByChatIdAndSenderIdNotAndIsReadFalse(String chatId, String senderId);
-    
+
     List<Message> findByChatIdAndSenderIdNotAndIsReadFalse(String chatId, String senderId);
+
+    /**
+     * Whether a chat has any actual participant-authored message - a chat gets created (with
+     * only an auto-generated SYSTEM "matched for ride sharing" message) as soon as either side
+     * opens the chat screen, before either of them has typed anything, so "a Chat document
+     * exists" alone isn't "they started chatting" - see RideService#findPartnersRide.
+     */
+    boolean existsByChatIdAndTypeNot(String chatId, Message.MessageType type);
 
     /**
      * Used to purge all messages of the chats a user was part of once their soft-deleted
