@@ -236,6 +236,11 @@ public class RideService {
         return rideMapper.rideToRideDto(rideRepository.save(ride));
     }
 
+    /**
+     * Completes the caller's ride, and - if they had a mutually-agreed partner (both rides
+     * point agreedPartnerUserId at each other) - completes the partner's ride too, so one
+     * person ending a shared ride doesn't leave the other stuck showing it as still active.
+     */
     @Transactional
     public void completeRide(String rideId, String phoneNumber) {
         User user = userService.findByPhoneNumber(phoneNumber);
@@ -246,5 +251,16 @@ public class RideService {
         ride.setIsActive(false);
         ride.setIsCompleted(true);
         rideRepository.save(ride);
+
+        if (ride.getAgreedPartnerUserId() != null) {
+            Ride partnerRide = findActiveRideByUserId(ride.getAgreedPartnerUserId());
+            boolean partnerMutuallyAgreed = partnerRide != null
+                    && ride.getUserId().equals(partnerRide.getAgreedPartnerUserId());
+            if (partnerMutuallyAgreed) {
+                partnerRide.setIsActive(false);
+                partnerRide.setIsCompleted(true);
+                rideRepository.save(partnerRide);
+            }
+        }
     }
 }
