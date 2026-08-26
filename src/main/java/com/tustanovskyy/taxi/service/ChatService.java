@@ -1,7 +1,10 @@
 package com.tustanovskyy.taxi.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tustanovskyy.taxi.document.Chat;
 import com.tustanovskyy.taxi.document.Message;
+import com.tustanovskyy.taxi.document.Ride;
 import com.tustanovskyy.taxi.document.User;
 import com.tustanovskyy.taxi.domain.request.ChatRequest;
 import com.tustanovskyy.taxi.domain.request.MessageRequest;
@@ -28,6 +31,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -43,8 +48,10 @@ public class ChatService {
     private final ChatRepository chatRepository;
     private final MessageRepository messageRepository;
     private final UserService userService;
+    private final RideService rideService;
     private final SimpMessagingTemplate messagingTemplate;
     private final MongoTemplate mongoTemplate;
+    private final ObjectMapper objectMapper;
 
     @Transactional
     public ChatResponse createChat(ChatRequest request, String currentUserPhone) {
@@ -74,8 +81,7 @@ public class ChatService {
         var savedChat = chatRepository.save(chat);
         log.info("Created chat: {}", savedChat);
 
-        // Send system message
-        sendSystemMessage(savedChat.getId(), "Chat created for ride sharing");
+        sendSystemMessage(savedChat.getId(), buildChatCreatedContent(request.getRideId(), participantIds));
 
         return mapToChatResponses(List.of(savedChat), currentUser.getId()).get(0);
     }
@@ -167,6 +173,35 @@ public class ChatService {
         
         unreadMessages.forEach(message -> message.setRead(true));
         messageRepository.saveAll(unreadMessages);
+    }
+
+    /**
+     * The "chat created" system message is stored as a JSON payload (ride addresses +
+     * participant names) rather than a fixed English sentence, so each viewer's client can
+     * render it in their own app language via i18n instead of everyone seeing one hardcoded
+     * language regardless of their locale.
+     */
+    private String buildChatCreatedContent(String rideId, List<String> participantIds) {
+        Ride ride = rideService.getRide(rideId);
+        Map<String, User> usersById = userService.findUsersByIds(new HashSet<>(participantIds));
+
+        List<String> participantNames = participantIds.stream()
+                .map(usersById::get)
+                .filter(Objects::nonNull)
+                .map(user -> (user.getFirstName() + " " + user.getLastName()).trim())
+                .collect(Collectors.toList());
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("fromAddress", ride.getPlaceFrom() != null ? ride.getPlaceFrom().getName() : null);
+        payload.put("toAddress", ride.getPlaceTo() != null ? ride.getPlaceTo().getName() : null);
+        payload.put("participantNames", participantNames);
+
+        try {
+            return objectMapper.writeValueAsString(payload);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to serialize chat-created system message payload for ride {}", rideId, e);
+            return "Chat created for ride sharing";
+        }
     }
 
     private void sendSystemMessage(String chatId, String content) {
