@@ -98,6 +98,13 @@ public class RideResource {
         return rideService.agreeRide(rideId, request.getPartnerUserId(), phoneNumber);
     }
 
+    @PostMapping("/{rideId}/decline")
+    public RideResponse declineRide(@PathVariable String rideId,
+                                     @AuthenticationPrincipal String phoneNumber) {
+        log.info("Declining ride {} by {}", rideId, phoneNumber);
+        return rideService.declineRide(rideId, phoneNumber);
+    }
+
     @PutMapping("/{rideId}/complete")
     public void completeRide(@PathVariable String rideId,
                               @AuthenticationPrincipal String phoneNumber) {

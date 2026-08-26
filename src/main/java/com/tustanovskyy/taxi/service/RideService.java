@@ -205,6 +205,22 @@ public class RideService {
         return rideMapper.rideToRideDto(rideRepository.save(ride));
     }
 
+    /**
+     * Clears a pending agreement proposal. The caller isn't the ride's owner here - they're the
+     * partner the owner proposed to (ride.agreedPartnerUserId points at them) - so access is
+     * checked against that field instead of ownership, matching agreeRide's ownership check.
+     */
+    @Transactional
+    public RideResponse declineRide(String rideId, String phoneNumber) {
+        User user = userService.findByPhoneNumber(phoneNumber);
+        Ride ride = getRide(rideId);
+        if (ride.getAgreedPartnerUserId() == null || !ride.getAgreedPartnerUserId().equals(user.getId())) {
+            throw new ValidationException(ErrorCode.ACCESS_DENIED, "Access denied");
+        }
+        ride.setAgreedPartnerUserId(null);
+        return rideMapper.rideToRideDto(rideRepository.save(ride));
+    }
+
     @Transactional
     public void completeRide(String rideId, String phoneNumber) {
         User user = userService.findByPhoneNumber(phoneNumber);
