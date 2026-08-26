@@ -13,7 +13,10 @@ import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import lombok.Builder.Default;
 
 @Document
 @CompoundIndexes({
@@ -45,4 +48,15 @@ public class Chat {
     private LocalDateTime lastMessageDate;
     
     private boolean isActive;
+
+    /**
+     * Order-independent "ride A | ride B" keys for pairings that already got a "chat created
+     * for ride sharing" system message - see ChatService#announceRideMatchIfNew. Since a chat is
+     * now shared by the same two people across all their rides over time (not recreated per
+     * ride), this is what stops a new system message from being sent every single time either
+     * side re-opens an already-announced, still-live match, while still sending a fresh one when
+     * they're matched again for a genuinely different ride later.
+     */
+    @Default
+    private Set<String> announcedPairingKeys = new HashSet<>();
 } 

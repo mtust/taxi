@@ -29,9 +29,11 @@ public interface ChatRepository extends MongoRepository<Chat, String> {
     List<Chat> findByRideIdAndParticipantIdsContainingAndIsActive(String rideId, String participantId, boolean isActive);
 
     /**
-     * A ride can have chats with several different partners, so an active chat must be
-     * identified by the exact set of participants, not just the rideId.
+     * The same two people always share one chat regardless of which (possibly many, over time)
+     * ride matched them together - not scoped by rideId, so re-matching later reuses this same
+     * conversation instead of starting a new one. An active chat is identified by the exact set
+     * of participants.
      */
-    @Query("{ 'rideId': ?0, 'participantIds': { '$all': ?1, '$size': ?2 }, 'isActive': ?3 }")
-    Optional<Chat> findActiveChatForParticipants(String rideId, List<String> participantIds, int participantCount, boolean isActive);
+    @Query("{ 'participantIds': { '$all': ?0, '$size': ?1 }, 'isActive': ?2 }")
+    Optional<Chat> findActiveChatForParticipants(List<String> participantIds, int participantCount, boolean isActive);
 } 

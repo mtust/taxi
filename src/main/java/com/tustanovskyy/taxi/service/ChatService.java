@@ -62,28 +62,64 @@ public class ChatService {
             participantIds.add(currentUser.getId());
         }
 
-        // A ride can have separate chats with different partners, so the lookup must match
-        // the exact pair of participants, not just the rideId.
-        var existingChat = chatRepository.findActiveChatForParticipants(
-                request.getRideId(), participantIds, participantIds.size(), true);
-        if (existingChat.isPresent()) {
-            return mapToChatResponses(List.of(existingChat.get()), currentUser.getId()).get(0);
+        // The same two people always share one chat, regardless of which (possibly many, over
+        // time) ride matched them together, and regardless of which side's own "start chat"
+        // call happens to run first when both discover each other around the same time.
+        var chat = chatRepository.findActiveChatForParticipants(participantIds, participantIds.size(), true)
+                .orElseGet(() -> {
+                    var created = chatRepository.save(Chat.builder()
+                            .rideId(request.getRideId())
+                            .participantIds(participantIds)
+                            .createdDate(LocalDateTime.now())
+                            .lastMessageDate(LocalDateTime.now())
+                            .isActive(true)
+                            .build());
+                    log.info("Created chat: {}", created);
+                    return created;
+                });
+
+        announceRideMatchIfNew(chat, currentUser.getId(), request.getRideId(), participantIds);
+
+        return mapToChatResponses(List.of(chat), currentUser.getId()).get(0);
+    }
+
+    /**
+     * Sends a fresh "chat created for ride sharing" system message the first time this pairing
+     * is seen for the two ride IDs currently involved - a brand new chat, or an existing one
+     * being reused because the same two people matched again for a different ride than last
+     * time. Keyed on both ride IDs (order-independent) rather than just the caller's, so when
+     * both sides' "start chat" calls land close together for the same live match, only one
+     * message gets sent instead of one per side.
+     */
+    private void announceRideMatchIfNew(Chat chat, String currentUserId, String currentUserRideId, List<String> participantIds) {
+        String otherUserId = participantIds.stream()
+                .filter(id -> !id.equals(currentUserId))
+                .findFirst()
+                .orElse(null);
+        if (otherUserId == null) {
+            return;
         }
 
-        var chat = Chat.builder()
-                .rideId(request.getRideId())
-                .participantIds(participantIds)
-                .createdDate(LocalDateTime.now())
-                .lastMessageDate(LocalDateTime.now())
-                .isActive(true)
-                .build();
+        Ride otherActiveRide = rideService.findActiveRideByUserId(otherUserId);
+        String myRideId = currentUserRideId != null ? currentUserRideId : "none";
+        String otherRideId = otherActiveRide != null ? otherActiveRide.getId() : "none";
+        String pairingKey = myRideId.compareTo(otherRideId) <= 0
+                ? myRideId + "|" + otherRideId
+                : otherRideId + "|" + myRideId;
 
-        var savedChat = chatRepository.save(chat);
-        log.info("Created chat: {}", savedChat);
+        Set<String> announcedKeys = chat.getAnnouncedPairingKeys();
+        if (announcedKeys == null) {
+            announcedKeys = new HashSet<>();
+            chat.setAnnouncedPairingKeys(announcedKeys);
+        }
+        if (announcedKeys.contains(pairingKey)) {
+            return;
+        }
 
-        sendSystemMessage(savedChat.getId(), buildChatCreatedContent(participantIds));
-
-        return mapToChatResponses(List.of(savedChat), currentUser.getId()).get(0);
+        sendSystemMessage(chat.getId(), buildChatCreatedContent(participantIds));
+        announcedKeys.add(pairingKey);
+        chat.setLastMessageDate(LocalDateTime.now());
+        chatRepository.save(chat);
     }
 
     @Transactional
