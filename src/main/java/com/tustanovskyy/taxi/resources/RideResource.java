@@ -13,6 +13,7 @@ import com.tustanovskyy.taxi.service.UserService;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -78,6 +79,14 @@ public class RideResource {
         Ride ride = rideService.getRide(id);
         userService.checkAccess(phoneNumber, ride.getUserId());
         rideService.cancelRide(ride);
+
+        // Only worth telling anyone via chat if there was actually a confirmed partner - no
+        // point notifying every candidate who was ever offered as a possible match.
+        if (ride.getAgreedPartnerUserId() != null) {
+            chatService.sendSystemMessageToParticipants(
+                    List.of(ride.getUserId(), ride.getAgreedPartnerUserId()),
+                    chatService.buildRideCancelledContent(ride.getUserId()));
+        }
     }
 
     @PostMapping("/{id}/chat/{partnerId}")
@@ -109,7 +118,17 @@ public class RideResource {
     public void completeRide(@PathVariable String rideId,
                               @AuthenticationPrincipal String phoneNumber) {
         log.info("Completing ride {} by {}", rideId, phoneNumber);
+        // Fetched before completing (not after) so we still have the pre-completion
+        // agreedPartnerUserId to know who to notify - completeRide doesn't clear it, but reading
+        // it from the same object we're about to mutate would be fragile either way.
+        Ride ride = rideService.getRide(rideId);
         rideService.completeRide(rideId, phoneNumber);
+
+        if (ride.getAgreedPartnerUserId() != null) {
+            chatService.sendSystemMessageToParticipants(
+                    List.of(ride.getUserId(), ride.getAgreedPartnerUserId()),
+                    chatService.buildRideCompletedContent(ride.getUserId()));
+        }
     }
 
 }

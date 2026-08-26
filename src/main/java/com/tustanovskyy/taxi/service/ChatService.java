@@ -257,14 +257,84 @@ public class ChatService {
                 .collect(Collectors.toList());
 
         Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("kind", "chatCreated");
         payload.put("participants", participants);
 
+        return toJson(payload, "Chat created for ride sharing");
+    }
+
+    /**
+     * "Ride completed" / "ride cancelled" system message payload - who did it, by name, so each
+     * viewer's client can render "You marked..." vs "{{name}} marked..." by comparing the
+     * actor's userId to whoever's currently logged in.
+     */
+    private String buildRideEventContent(String kind, String actorUserId, String fallback) {
+        User actor = userService.findUsersByIds(Set.of(actorUserId)).get(actorUserId);
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("kind", kind);
+        payload.put("actorUserId", actorUserId);
+        payload.put("actorName", actor != null ? (actor.getFirstName() + " " + actor.getLastName()).trim() : null);
+
+        return toJson(payload, fallback);
+    }
+
+    public String buildRideCompletedContent(String actorUserId) {
+        return buildRideEventContent("rideCompleted", actorUserId, "Ride completed");
+    }
+
+    public String buildRideCancelledContent(String actorUserId) {
+        return buildRideEventContent("rideCancelled", actorUserId, "Ride cancelled");
+    }
+
+    /**
+     * A rating is otherwise private feedback the rated user might never see in the app - posting
+     * it into the shared chat as a system message (score + comment, and who left it) makes it
+     * visible to both participants there, per how this app wants ride outcomes surfaced.
+     */
+    public String buildRatingSubmittedContent(String raterUserId, String ratedUserId, int score, String comment) {
+        Map<String, User> usersById = userService.findUsersByIds(new HashSet<>(List.of(raterUserId, ratedUserId)));
+        User rater = usersById.get(raterUserId);
+        User rated = usersById.get(ratedUserId);
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("kind", "ratingSubmitted");
+        payload.put("raterUserId", raterUserId);
+        payload.put("raterName", rater != null ? (rater.getFirstName() + " " + rater.getLastName()).trim() : null);
+        payload.put("ratedUserId", ratedUserId);
+        payload.put("ratedName", rated != null ? (rated.getFirstName() + " " + rated.getLastName()).trim() : null);
+        payload.put("score", score);
+        payload.put("comment", comment);
+
+        return toJson(payload, "Rating submitted");
+    }
+
+    private String toJson(Map<String, Object> payload, String fallback) {
         try {
             return objectMapper.writeValueAsString(payload);
         } catch (JsonProcessingException e) {
-            log.error("Failed to serialize chat-created system message payload for participants {}", participantIds, e);
-            return "Chat created for ride sharing";
+            log.error("Failed to serialize system message payload: {}", payload, e);
+            return fallback;
         }
+    }
+
+    /**
+     * Posts a system message into the existing chat between two participants - e.g. a ride
+     * being completed/cancelled, or a rating being left. Unlike createChat, this never creates a
+     * chat: these events only make sense once a chat/partnership already exists between them.
+     */
+    @Transactional
+    public void sendSystemMessageToParticipants(List<String> participantIds, String content) {
+        List<Chat> chats = chatRepository.findActiveChatsForParticipants(participantIds, participantIds.size(), true);
+        if (chats.isEmpty()) {
+            log.warn("No active chat found for participants {} - skipping system message", participantIds);
+            return;
+        }
+
+        Chat chat = chats.stream().max(Comparator.comparing(Chat::getLastMessageDate)).orElseThrow();
+        sendSystemMessage(chat.getId(), content);
+        chat.setLastMessageDate(LocalDateTime.now());
+        chatRepository.save(chat);
     }
 
     private void sendSystemMessage(String chatId, String content) {
