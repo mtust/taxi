@@ -170,6 +170,17 @@ public class RideService {
                         Map.of("rideId", id)));
     }
 
+    /**
+     * A user has at most one active ride at a time (enforced in createRide), so the most
+     * recent one from this ordered lookup is their current one - or null if they don't have one.
+     */
+    public Ride findActiveRideByUserId(String userId) {
+        return rideRepository.findByUserIdAndIsActiveOrderByDateDesc(userId, true)
+                .stream()
+                .findFirst()
+                .orElse(null);
+    }
+
     private List<Ride> findByPlaceToCoordinatesNear(Place place) {
         return rideRepository.findByIsActiveAndScheduledToAfterAndPlaceToCoordinatesNear(
                 true,
@@ -206,15 +217,19 @@ public class RideService {
     }
 
     /**
-     * Clears a pending agreement proposal. The caller isn't the ride's owner here - they're the
-     * partner the owner proposed to (ride.agreedPartnerUserId points at them) - so access is
-     * checked against that field instead of ownership, matching agreeRide's ownership check.
+     * Clears a pending agreement proposal. Two different people can legitimately call this on
+     * the same ride: the ride's owner cancelling their own outgoing proposal, or the invited
+     * partner (ride.agreedPartnerUserId points at them) declining it - so access is granted to
+     * either, rather than checked against ownership alone like agreeRide.
      */
     @Transactional
     public RideResponse declineRide(String rideId, String phoneNumber) {
         User user = userService.findByPhoneNumber(phoneNumber);
         Ride ride = getRide(rideId);
-        if (ride.getAgreedPartnerUserId() == null || !ride.getAgreedPartnerUserId().equals(user.getId())) {
+        boolean isOwner = ride.getUserId().equals(user.getId());
+        boolean isInvitedPartner = ride.getAgreedPartnerUserId() != null
+                && ride.getAgreedPartnerUserId().equals(user.getId());
+        if (!isOwner && !isInvitedPartner) {
             throw new ValidationException(ErrorCode.ACCESS_DENIED, "Access denied");
         }
         ride.setAgreedPartnerUserId(null);

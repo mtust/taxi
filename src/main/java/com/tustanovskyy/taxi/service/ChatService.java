@@ -81,7 +81,7 @@ public class ChatService {
         var savedChat = chatRepository.save(chat);
         log.info("Created chat: {}", savedChat);
 
-        sendSystemMessage(savedChat.getId(), buildChatCreatedContent(request.getRideId(), participantIds));
+        sendSystemMessage(savedChat.getId(), buildChatCreatedContent(participantIds));
 
         return mapToChatResponses(List.of(savedChat), currentUser.getId()).get(0);
     }
@@ -176,30 +176,39 @@ public class ChatService {
     }
 
     /**
-     * The "chat created" system message is stored as a JSON payload (ride addresses +
-     * participant names) rather than a fixed English sentence, so each viewer's client can
-     * render it in their own app language via i18n instead of everyone seeing one hardcoded
-     * language regardless of their locale.
+     * The "chat created" system message is stored as a JSON payload - each participant's own
+     * name and their own ride's addresses - rather than a fixed English sentence. Each
+     * participant has their OWN ride (they're matched as partners by proximity, not sharing one
+     * ride record), so this looks up every participant's active ride individually rather than
+     * using the single ride that happened to create the chat. Storing per-participant data lets
+     * each viewer's client render it in their own app language via i18n, and pick out "my route"
+     * vs "partner's route" by comparing userId to whoever's currently logged in, instead of
+     * everyone seeing one hardcoded language/perspective.
      */
-    private String buildChatCreatedContent(String rideId, List<String> participantIds) {
-        Ride ride = rideService.getRide(rideId);
+    private String buildChatCreatedContent(List<String> participantIds) {
         Map<String, User> usersById = userService.findUsersByIds(new HashSet<>(participantIds));
 
-        List<String> participantNames = participantIds.stream()
-                .map(usersById::get)
-                .filter(Objects::nonNull)
-                .map(user -> (user.getFirstName() + " " + user.getLastName()).trim())
+        List<Map<String, Object>> participants = participantIds.stream()
+                .map(id -> {
+                    User user = usersById.get(id);
+                    Ride ride = rideService.findActiveRideByUserId(id);
+
+                    Map<String, Object> participant = new LinkedHashMap<>();
+                    participant.put("userId", id);
+                    participant.put("name", user != null ? (user.getFirstName() + " " + user.getLastName()).trim() : null);
+                    participant.put("fromAddress", ride != null && ride.getPlaceFrom() != null ? ride.getPlaceFrom().getName() : null);
+                    participant.put("toAddress", ride != null && ride.getPlaceTo() != null ? ride.getPlaceTo().getName() : null);
+                    return participant;
+                })
                 .collect(Collectors.toList());
 
         Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("fromAddress", ride.getPlaceFrom() != null ? ride.getPlaceFrom().getName() : null);
-        payload.put("toAddress", ride.getPlaceTo() != null ? ride.getPlaceTo().getName() : null);
-        payload.put("participantNames", participantNames);
+        payload.put("participants", participants);
 
         try {
             return objectMapper.writeValueAsString(payload);
         } catch (JsonProcessingException e) {
-            log.error("Failed to serialize chat-created system message payload for ride {}", rideId, e);
+            log.error("Failed to serialize chat-created system message payload for participants {}", participantIds, e);
             return "Chat created for ride sharing";
         }
     }
