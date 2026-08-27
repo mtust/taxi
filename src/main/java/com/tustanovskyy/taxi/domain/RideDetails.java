@@ -27,10 +27,11 @@ public class RideDetails {
     private String agreedPartnerUserId;
 
     /**
-     * Whether the ride's OWNER already has an active chat with the caller of this endpoint -
-     * only ever populated by RideService#findPartnersRide (the only place that knows who "the
-     * caller" is), and only meaningful there; defaults to false elsewhere (e.g. GET /rides/{id},
-     * which has no caller-relative context).
+     * Whether the ride's OWNER and the caller of this endpoint have an active chat with at least
+     * one real (non-system) message in it - not just an auto-created, still-empty chat (opening
+     * the chat screen creates the Chat document before anyone's typed anything). Only ever
+     * populated by RideService#findPartnersRide (the only place that knows who "the caller" is);
+     * defaults to false elsewhere (e.g. GET /rides/{id}, which has no caller-relative context).
      */
     private boolean hasChatWithMe;
 
