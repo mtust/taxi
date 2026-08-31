@@ -38,10 +38,14 @@ public final class PushMessages {
     );
 
     public static String rideProposeBody(String language) {
-        return RIDE_PROPOSE_BODY.getOrDefault(language, RIDE_PROPOSE_BODY.get("en"));
+        // Map.ofEntries() is an immutable map that throws NPE on a null key (unlike HashMap,
+        // which handles null keys fine) - User#language is null for accounts that never
+        // explicitly set one, so the lookup key has to be normalized before it ever reaches the
+        // map, not handled via getOrDefault's (non-existent, for this map type) null handling.
+        return RIDE_PROPOSE_BODY.getOrDefault(language != null ? language : "en", RIDE_PROPOSE_BODY.get("en"));
     }
 
     public static String rideAcceptedBody(String language) {
-        return RIDE_ACCEPTED_BODY.getOrDefault(language, RIDE_ACCEPTED_BODY.get("en"));
+        return RIDE_ACCEPTED_BODY.getOrDefault(language != null ? language : "en", RIDE_ACCEPTED_BODY.get("en"));
     }
 }
