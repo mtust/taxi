@@ -35,6 +35,7 @@ public enum ErrorCode {
     ALREADY_RATED(HttpStatus.CONFLICT),
     INVALID_RATING_SCORE(HttpStatus.BAD_REQUEST),
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED),
+    FEEDBACK_MESSAGE_EMPTY(HttpStatus.BAD_REQUEST),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final HttpStatus httpStatus;
