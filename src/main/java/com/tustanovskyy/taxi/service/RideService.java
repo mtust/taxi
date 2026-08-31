@@ -232,6 +232,13 @@ public class RideService {
 
     @Transactional
     public RideResponse agreeRide(String rideId, String partnerUserId, String phoneNumber) {
+        if (partnerUserId == null || partnerUserId.isBlank()) {
+            // Without this check, a null partnerUserId sails past every check below (a Mongo
+            // query with a null field just matches nothing) until it hits findUser(null) in
+            // notifyPartnerOfAgreement, which throws a raw, uninformative NPE deep in Spring
+            // Data's id-conversion internals instead of a clean 400.
+            throw new ValidationException(ErrorCode.PARTNER_USER_ID_REQUIRED, "Partner user id is required");
+        }
         User user = userService.findByPhoneNumber(phoneNumber);
         Ride ride = getRide(rideId);
         if (!ride.getUserId().equals(user.getId())) {
