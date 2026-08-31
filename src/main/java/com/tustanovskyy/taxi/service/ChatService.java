@@ -14,6 +14,7 @@ import com.tustanovskyy.taxi.exception.ErrorCode;
 import com.tustanovskyy.taxi.exception.ValidationException;
 import com.tustanovskyy.taxi.repository.ChatRepository;
 import com.tustanovskyy.taxi.repository.MessageRepository;
+import com.tustanovskyy.taxi.service.notification.ExpoPushService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
@@ -53,6 +54,7 @@ public class ChatService {
     private final SimpMessagingTemplate messagingTemplate;
     private final MongoTemplate mongoTemplate;
     private final ObjectMapper objectMapper;
+    private final ExpoPushService expoPushService;
 
     @Transactional
     public ChatResponse createChat(ChatRequest request, String currentUserPhone) {
@@ -172,8 +174,37 @@ public class ChatService {
         // Send to WebSocket subscribers
         messagingTemplate.convertAndSend("/topic/chat/" + chatId, messageResponse);
 
+        notifyRecipientOfMessage(chat, sender, savedMessage);
+
         log.info("Sent message: {}", savedMessage);
         return messageResponse;
+    }
+
+    /**
+     * Push-notifies the other participant of a real, user-typed message. Only reachable from
+     * here - system messages (ride matched/completed/rating) are created via the separate
+     * sendSystemMessage helper below, never through this public sendMessage path - so every
+     * message here is genuinely something someone typed, no type filtering needed.
+     */
+    private void notifyRecipientOfMessage(Chat chat, User sender, Message savedMessage) {
+        String recipientId = chat.getParticipantIds().stream()
+                .filter(id -> !id.equals(sender.getId()))
+                .findFirst()
+                .orElse(null);
+        if (recipientId == null) {
+            return;
+        }
+        User recipient = userService.findUser(recipientId);
+        String senderName = (sender.getFirstName() + " " + sender.getLastName()).trim();
+        String content = savedMessage.getContent() == null ? "" : savedMessage.getContent();
+        String preview = content.length() > 120 ? content.substring(0, 120) + "…" : content;
+        expoPushService.send(recipient.getPushToken(), senderName, preview, Map.of(
+                "type", "message",
+                "chatId", chat.getId(),
+                "rideId", chat.getRideId() == null ? "" : chat.getRideId(),
+                "partnerId", sender.getId(),
+                "partnerName", senderName
+        ));
     }
 
     public List<ChatResponse> getUserChats(String userPhone, String rideId, int page, int size) {

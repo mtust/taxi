@@ -3,6 +3,7 @@ package com.tustanovskyy.taxi.resources;
 import com.tustanovskyy.taxi.document.User;
 import com.tustanovskyy.taxi.domain.Place;
 import com.tustanovskyy.taxi.domain.request.EditUserRequest;
+import com.tustanovskyy.taxi.domain.request.PushTokenRequest;
 import com.tustanovskyy.taxi.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +42,16 @@ public class UserResources {
     @DeleteMapping
     public void deleteUser(@AuthenticationPrincipal String phoneNumber) {
         userService.deleteUser(phoneNumber);
+    }
+
+    @PostMapping("push-token")
+    public void registerPushToken(@RequestBody PushTokenRequest request, @AuthenticationPrincipal String phoneNumber) {
+        userService.updatePushToken(phoneNumber, request.getToken());
+    }
+
+    @DeleteMapping("push-token")
+    public void clearPushToken(@AuthenticationPrincipal String phoneNumber) {
+        userService.clearPushToken(phoneNumber);
     }
 
     /**

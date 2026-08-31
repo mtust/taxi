@@ -14,6 +14,8 @@ import com.tustanovskyy.taxi.document.Message;
 import com.tustanovskyy.taxi.repository.ChatRepository;
 import com.tustanovskyy.taxi.repository.MessageRepository;
 import com.tustanovskyy.taxi.repository.RideRepository;
+import com.tustanovskyy.taxi.service.notification.ExpoPushService;
+import com.tustanovskyy.taxi.service.notification.PushMessages;
 import com.tustanovskyy.taxi.service.validatior.RideValidator;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -42,6 +44,7 @@ public class RideService {
     private final RideRepository rideRepository;
     private final ChatRepository chatRepository;
     private final MessageRepository messageRepository;
+    private final ExpoPushService expoPushService;
     private final UserService userService;
     private final RideMapper rideMapper;
     private final RideValidator rideValidator;
@@ -234,8 +237,30 @@ public class RideService {
         if (!ride.getUserId().equals(user.getId())) {
             throw new ValidationException(ErrorCode.ACCESS_DENIED, "Access denied");
         }
+
+        // agreeRide is called by both sides of a proposal: the ride owner proposing to
+        // partnerUserId (first call), and the invited partner accepting by calling this same
+        // method on THEIR OWN ride with partnerUserId = the original proposer. Distinguish which
+        // one this is - before overwriting - by checking whether the partner's ride already
+        // points back at us: if so, this call just completed mutual agreement (an accept);
+        // otherwise it's a fresh proposal.
+        Ride partnerRide = findActiveRideByUserId(partnerUserId);
+        boolean isAccept = partnerRide != null && user.getId().equals(partnerRide.getAgreedPartnerUserId());
+
         ride.setAgreedPartnerUserId(partnerUserId);
-        return rideMapper.rideToRideDto(rideRepository.save(ride));
+        RideResponse response = rideMapper.rideToRideDto(rideRepository.save(ride));
+
+        notifyPartnerOfAgreement(partnerUserId, user, isAccept);
+        return response;
+    }
+
+    private void notifyPartnerOfAgreement(String partnerUserId, User proposer, boolean isAccept) {
+        User partner = userService.findUser(partnerUserId);
+        String proposerName = (proposer.getFirstName() + " " + proposer.getLastName()).trim();
+        String body = isAccept
+                ? PushMessages.rideAcceptedBody(partner.getLanguage())
+                : PushMessages.rideProposeBody(partner.getLanguage());
+        expoPushService.send(partner.getPushToken(), proposerName, body, Map.of("type", "ride_agree"));
     }
 
     /**

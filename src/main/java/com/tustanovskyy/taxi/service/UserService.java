@@ -178,6 +178,16 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    public void updatePushToken(String phoneNumber, String token) {
+        User user = this.getUserByPhoneNumber(phoneNumber);
+        user.setPushToken(token);
+        userRepository.save(user);
+    }
+
+    public void clearPushToken(String phoneNumber) {
+        updatePushToken(phoneNumber, null);
+    }
+
     /**
      * Soft-deletes a user's account: identifying info (name, email, phone, password, home
      * address) is wiped immediately and the account is flagged as deleted, which also blocks

@@ -55,6 +55,12 @@ public class User {
     @JsonIgnore
     private LocalDateTime lastTimePhoneVerified;
 
+    /** Expo push token for this user's device - never exposed to any client, only used
+     * server-side to send push notifications (see ExpoPushService). Null until they register
+     * one (on login), cleared on logout. Single-device only: a fresh login overwrites it. */
+    @JsonIgnore
+    private String pushToken;
+
     /**
      * Sliding window (max 3) of timestamps when a verification SMS was sent to this user.
      * Used to enforce an escalating cooldown between resends and prevent SMS spam.
