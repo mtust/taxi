@@ -15,14 +15,7 @@ import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 
 import java.util.Collection;
 
-/**
- * {@code uses = UserMapper.class} makes {@code User -> UserResponse} (for {@link RideDetails#user}
- * below) go through {@link UserMapper#toUserResponse} - the one place that mapping is defined -
- * instead of MapStruct generating a second, independent copy of it here that wouldn't inherit
- * that method's {@code phoneNumber} exclusion (a ride's owner is a prospective partner from the
- * caller's point of view, not the caller, so their phone number must not be exposed this way).
- */
-@Mapper(componentModel = "spring", uses = UserMapper.class, unmappedTargetPolicy = ReportingPolicy.WARN)
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.WARN)
 public interface RideMapper {
 
     @Mapping(target = "passengerCount", source = "passengerCount", defaultValue = "1")
