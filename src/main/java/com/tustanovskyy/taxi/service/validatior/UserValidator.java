@@ -28,13 +28,12 @@ public class UserValidator extends BaseValidator{
                 ErrorCode.PASSWORDS_DO_NOT_MATCH, "Passwords do not match");
         validate(() -> StringUtils.isNotEmpty(request.getPhoneNumber()),
                 ErrorCode.PHONE_NUMBER_EMPTY, "Phone number is empty");
-        // A record for this phone that never finished phone verification isn't a real account
-        // yet - e.g. the app was closed before entering the SMS code, or the SMS never arrived -
-        // so it shouldn't permanently block signing up again. UserService#createUser reuses that
-        // record (fresh name/password, new SMS) instead of inserting a duplicate. Only a
-        // registration that actually completed blocks a resignup.
-        validate(() -> userRepository.findByPhoneNumber(request.getPhoneNumber())
-                        .map(User::isRegistrationCompleted).map(completed -> !completed).orElse(true),
+        // Deliberately blocks a resignup even for a record that never finished phone
+        // verification - that's now handled by directing the user to log in instead, where
+        // UserService#login resends the verification SMS automatically for an incomplete
+        // registration (see PHONE_NOT_VERIFIED there), rather than silently overwriting the
+        // existing record's name/password here.
+        validate(() -> userRepository.findByPhoneNumber(request.getPhoneNumber()).isEmpty(),
                 ErrorCode.USER_ALREADY_EXISTS, "User with this phone number already exists");
     }
 
