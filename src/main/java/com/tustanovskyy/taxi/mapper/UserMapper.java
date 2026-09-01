@@ -8,11 +8,13 @@ import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
 /**
- * {@code uses = RideMapper.class} lets MapStruct reuse {@link RideMapper#placeToPlaceDto} to
+ * {@code uses = PlaceMapper.class} lets MapStruct reuse {@link PlaceMapper#placeToPlaceDto} to
  * convert {@code User.homeAddress} (document {@code Place}, GeoJSON-backed) into the domain
- * {@code Place} exposed on {@link UserResponse}.
+ * {@code Place} exposed on {@link UserResponse}. Deliberately not {@code RideMapper} - RideMapper
+ * itself needs this mapper (see its own doc), and Spring Boot 2.6+ rejects a circular bean
+ * dependency between the two by default.
  */
-@Mapper(componentModel = "spring", uses = RideMapper.class, unmappedTargetPolicy = ReportingPolicy.WARN)
+@Mapper(componentModel = "spring", uses = PlaceMapper.class, unmappedTargetPolicy = ReportingPolicy.WARN)
 public interface UserMapper {
 
     @Mapping(target = "password", ignore = true)

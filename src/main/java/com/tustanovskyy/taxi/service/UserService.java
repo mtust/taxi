@@ -12,7 +12,7 @@ import com.tustanovskyy.taxi.exception.ErrorCode;
 import com.tustanovskyy.taxi.exception.SmsRateLimitException;
 import com.tustanovskyy.taxi.exception.ValidationException;
 import com.tustanovskyy.taxi.document.Chat;
-import com.tustanovskyy.taxi.mapper.RideMapper;
+import com.tustanovskyy.taxi.mapper.PlaceMapper;
 import com.tustanovskyy.taxi.mapper.UserMapper;
 import com.tustanovskyy.taxi.repository.ChatRepository;
 import com.tustanovskyy.taxi.repository.MessageRepository;
@@ -46,7 +46,7 @@ public class UserService {
     private final SmsService smsService;
     private final SmsRateLimiter smsRateLimiter;
     private final UserMapper userMapper;
-    private final RideMapper rideMapper;
+    private final PlaceMapper placeMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenUtil jwtTokenUtil;
     private final UserValidator userValidator;
@@ -166,7 +166,7 @@ public class UserService {
 
     public User addHomeAddress(Place homeAddress, String phoneNumber) {
         return userRepository.findByPhoneNumber(phoneNumber)
-                .map(user -> user.setHomeAddress(rideMapper.placeDtoToPlace(homeAddress)))
+                .map(user -> user.setHomeAddress(placeMapper.placeDtoToPlace(homeAddress)))
                 .map(userRepository::save)
                 .orElseThrow(() -> new ValidationException(ErrorCode.ADD_HOME_ADDRESS_FAILED, "failed to add home address"));
     }
