@@ -39,9 +39,10 @@ public class UserValidator extends BaseValidator{
     }
 
     public void validateLogin(User user, String password, PasswordEncoder passwordEncoder) {
-        validate(user::isRegistrationCompleted, ErrorCode.PHONE_NOT_VERIFIED, "Phone number not verified");
         // Intentionally the same error as "phone number not found" in UserService#login -
-        // never reveal which of the two was wrong.
+        // never reveal which of the two was wrong. The registration-completed check lives in
+        // UserService#login itself, after this - it has a side effect (resending the
+        // verification SMS) that must only run once the password's already confirmed correct.
         validate(() -> passwordEncoder.matches(password, user.getPassword()),
                 ErrorCode.INVALID_CREDENTIALS, "Invalid phone number or password");
     }

@@ -123,7 +123,24 @@ public class UserService {
         // to enumerate which phone numbers are registered.
         User user = userRepository.findByPhoneNumber(phoneNumber)
                 .orElseThrow(() -> new ValidationException(ErrorCode.INVALID_CREDENTIALS, "Invalid phone number or password"));
+        // Password checked before the registration-completed check below, so only someone who
+        // actually knows the password can trigger a verification resend - not anyone who happens
+        // to know/guess a registered-but-unverified phone number.
         userValidator.validateLogin(user, password, passwordEncoder);
+
+        if (!user.isRegistrationCompleted()) {
+            // Picks up an abandoned signup right where it left off - the FE routes this error to
+            // VerificationScreen, same as a fresh signup. If a code was already sent recently the
+            // resend is just skipped (rate limiter); an earlier code may still be valid, and the
+            // user can resend manually from that screen once the cooldown clears.
+            try {
+                sendUserPhoneVerification(user);
+            } catch (SmsRateLimitException e) {
+                log.info("Skipping verification resend on login for {} - rate limited", phoneNumber);
+            }
+            throw new ValidationException(ErrorCode.PHONE_NOT_VERIFIED, "Phone number not verified");
+        }
+
         return createLoginResponse(user);
     }
 
