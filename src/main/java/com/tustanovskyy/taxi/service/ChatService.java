@@ -1,6 +1,7 @@
 package com.tustanovskyy.taxi.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tustanovskyy.taxi.document.Chat;
 import com.tustanovskyy.taxi.document.Message;
@@ -15,6 +16,7 @@ import com.tustanovskyy.taxi.exception.ValidationException;
 import com.tustanovskyy.taxi.repository.ChatRepository;
 import com.tustanovskyy.taxi.repository.MessageRepository;
 import com.tustanovskyy.taxi.service.notification.ExpoPushService;
+import com.tustanovskyy.taxi.service.notification.PushMessages;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
@@ -184,7 +186,10 @@ public class ChatService {
      * Push-notifies the other participant of a real, user-typed message. Only reachable from
      * here - system messages (ride matched/completed/rating) are created via the separate
      * sendSystemMessage helper below, never through this public sendMessage path - so every
-     * message here is genuinely something someone typed, no type filtering needed.
+     * message here is genuinely something someone typed. TEXT is the only type the FE actually
+     * sends today, but IMAGE/LOCATION are declared and could start being sent later without this
+     * method changing - their content is a URL/coordinate payload, not something to show
+     * verbatim in a push preview, so only TEXT gets its raw content previewed.
      */
     private void notifyRecipientOfMessage(Chat chat, User sender, Message savedMessage) {
         String recipientId = chat.getParticipantIds().stream()
@@ -196,8 +201,13 @@ public class ChatService {
         }
         User recipient = userService.findUser(recipientId);
         String senderName = (sender.getFirstName() + " " + sender.getLastName()).trim();
-        String content = savedMessage.getContent() == null ? "" : savedMessage.getContent();
-        String preview = content.length() > 120 ? content.substring(0, 120) + "…" : content;
+        String preview;
+        if (savedMessage.getType() == Message.MessageType.TEXT) {
+            String content = savedMessage.getContent() == null ? "" : savedMessage.getContent();
+            preview = content.length() > 120 ? content.substring(0, 120) + "…" : content;
+        } else {
+            preview = "New message";
+        }
         expoPushService.send(recipient.getPushToken(), senderName, preview, Map.of(
                 "type", "message",
                 "chatId", chat.getId(),
@@ -366,6 +376,54 @@ public class ChatService {
         sendSystemMessage(chat.getId(), content);
         chat.setLastMessageDate(LocalDateTime.now());
         chatRepository.save(chat);
+
+        notifyParticipantsOfSystemEvent(chat, content);
+    }
+
+    /**
+     * Push-notifies every OTHER participant (not whoever triggered the event) of a ride
+     * completed/cancelled system event, reusing the "message" push data shape so tapping it
+     * opens the chat the system message was just posted to - same as tapping a real chat
+     * message notification (see usePushNotifications.ts on the FE). Other system kinds
+     * (chat created, rating submitted) intentionally don't push here: chat-created is already
+     * covered by the "Ride agreed" push sent from RideService when the match is confirmed, and a
+     * rating is private feedback only the rater sees (formatSystemMessage.ts on the FE hides it
+     * from the ratee entirely), so pushing it would leak that a rating just happened.
+     */
+    private void notifyParticipantsOfSystemEvent(Chat chat, String content) {
+        Map<String, Object> payload;
+        try {
+            payload = objectMapper.readValue(content, new TypeReference<Map<String, Object>>() {});
+        } catch (JsonProcessingException e) {
+            return;
+        }
+        Object kind = payload.get("kind");
+        if (!"rideCompleted".equals(kind) && !"rideCancelled".equals(kind)) {
+            return;
+        }
+        Object actorUserId = payload.get("actorUserId");
+        if (!(actorUserId instanceof String)) {
+            return;
+        }
+        String actorName = Objects.toString(payload.get("actorName"), "");
+
+        Set<String> recipientIds = chat.getParticipantIds().stream()
+                .filter(id -> !id.equals(actorUserId))
+                .collect(Collectors.toSet());
+        Map<String, User> recipients = userService.findUsersByIds(recipientIds);
+
+        recipients.values().forEach(recipient -> {
+            String body = "rideCompleted".equals(kind)
+                    ? PushMessages.rideCompletedBody(recipient.getLanguage())
+                    : PushMessages.rideCancelledBody(recipient.getLanguage());
+            expoPushService.send(recipient.getPushToken(), actorName, body, Map.of(
+                    "type", "message",
+                    "chatId", chat.getId(),
+                    "rideId", chat.getRideId() == null ? "" : chat.getRideId(),
+                    "partnerId", (String) actorUserId,
+                    "partnerName", actorName
+            ));
+        });
     }
 
     private void sendSystemMessage(String chatId, String content) {

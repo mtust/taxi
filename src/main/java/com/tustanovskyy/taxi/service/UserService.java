@@ -57,12 +57,27 @@ public class UserService {
     @Value("${taxi.user.deletion.retention-days:30}")
     private int deletionRetentionDays;
 
-    public User createUser(SignUpRequest user) {
-        userValidator.validateSignUpRequest(user);
-        var created = userRepository.save(userMapper.signUpRequestToUser(user)
-                .setPassword(passwordEncoder.encode(user.getPassword())));
+    public User createUser(SignUpRequest request) {
+        userValidator.validateSignUpRequest(request);
+        // phoneNumber is uniquely indexed, so a never-verified record from a previous, abandoned
+        // signup attempt (validator already confirmed !registrationCompleted for it) has to be
+        // updated in place rather than inserted again - a fresh insert would collide on the index.
+        User user = userRepository.findByPhoneNumber(request.getPhoneNumber())
+                .map(existing -> fillSignUpFields(existing, request))
+                .orElseGet(() -> userMapper.signUpRequestToUser(request));
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        var created = userRepository.save(user);
         sendUserPhoneVerification(created);
         return created;
+    }
+
+    private User fillSignUpFields(User user, SignUpRequest request) {
+        return user
+                .setFirstName(request.getFirstName())
+                .setLastName(request.getLastName())
+                .setSex(request.getSex())
+                .setLanguage(request.getLanguage())
+                .setEmail(request.getEmail());
     }
 
     public User findUser(String userId) {
