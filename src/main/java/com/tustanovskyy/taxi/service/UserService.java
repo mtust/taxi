@@ -7,6 +7,7 @@ import com.tustanovskyy.taxi.domain.request.EditUserRequest;
 import com.tustanovskyy.taxi.domain.request.RecoveryPasswordRequest;
 import com.tustanovskyy.taxi.domain.request.SignUpRequest;
 import com.tustanovskyy.taxi.domain.response.LoginResponse;
+import com.tustanovskyy.taxi.domain.response.UserResponse;
 import com.tustanovskyy.taxi.exception.ErrorCode;
 import com.tustanovskyy.taxi.exception.SmsRateLimitException;
 import com.tustanovskyy.taxi.exception.ValidationException;
@@ -147,9 +148,15 @@ public class UserService {
     }
 
     private LoginResponse createLoginResponse(User user) {
+        // Every caller of createLoginResponse is the user authenticating as themselves (login,
+        // signup verification, password recovery) - the one context where showing their own
+        // phone number back to them is correct - so it's set explicitly here rather than on
+        // UserMapper#toUserResponse itself, which intentionally excludes it (see there) since
+        // that same mapping is also used to expose OTHER users (ride partners) to the caller.
+        UserResponse userResponse = userMapper.toUserResponse(user).setPhoneNumber(user.getPhoneNumber());
         return new LoginResponse()
                 .setToken(jwtTokenUtil.generateToken(user.getPhoneNumber()))
-                .setUser(userMapper.toUserResponse(user));
+                .setUser(userResponse);
     }
 
     public User getUserByPhoneNumber(String phoneNumber) {
