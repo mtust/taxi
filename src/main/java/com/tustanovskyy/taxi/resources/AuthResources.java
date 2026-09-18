@@ -30,14 +30,9 @@ public class AuthResources {
         return userService.createUser(user);
     }
 
-    @PostMapping("verify/phone")
-    public void verifyPhone(@RequestBody PhoneRequest phoneRequest) {
-        userService.sendUserPhoneVerification(phoneRequest.getPhoneNumber());
-    }
-
     @PostMapping("/verify")
     public LoginResponse verifyCode(@RequestBody CodeRequest codeRequest) {
-        return userService.validateCode(codeRequest.getCode(), codeRequest.getPhoneNumber());
+        return userService.validateCode(codeRequest.getIdToken());
     }
 
     @PostMapping("/login")

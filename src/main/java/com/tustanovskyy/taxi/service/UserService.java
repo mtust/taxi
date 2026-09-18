@@ -9,7 +9,6 @@ import com.tustanovskyy.taxi.domain.request.SignUpRequest;
 import com.tustanovskyy.taxi.domain.response.LoginResponse;
 import com.tustanovskyy.taxi.domain.response.UserResponse;
 import com.tustanovskyy.taxi.exception.ErrorCode;
-import com.tustanovskyy.taxi.exception.SmsRateLimitException;
 import com.tustanovskyy.taxi.exception.ValidationException;
 import com.tustanovskyy.taxi.document.Chat;
 import com.tustanovskyy.taxi.mapper.PlaceMapper;
@@ -25,7 +24,6 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -43,8 +41,7 @@ import org.springframework.stereotype.Service;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final SmsService smsService;
-    private final SmsRateLimiter smsRateLimiter;
+    private final FirebaseAuthService firebaseAuthService;
     private final UserMapper userMapper;
     private final PlaceMapper placeMapper;
     private final PasswordEncoder passwordEncoder;
@@ -60,10 +57,10 @@ public class UserService {
 
     public User createUser(SignUpRequest user) {
         userValidator.validateSignUpRequest(user);
-        var created = userRepository.save(userMapper.signUpRequestToUser(user)
+        // Phone verification is now driven client-side via the Firebase Auth SDK (see
+        // #validateCode) rather than triggered by the server, so no SMS is sent here.
+        return userRepository.save(userMapper.signUpRequestToUser(user)
                 .setPassword(passwordEncoder.encode(user.getPassword())));
-        sendUserPhoneVerification(created);
-        return created;
     }
 
     public User findUser(String userId) {
@@ -88,11 +85,9 @@ public class UserService {
                 .collect(Collectors.toMap(User::getId, Function.identity()));
     }
 
-    public LoginResponse validateCode(String code, String phoneNumber) {
+    public LoginResponse validateCode(String idToken) {
+        String phoneNumber = firebaseAuthService.verifyPhoneNumber(idToken);
         User user = getUserByPhoneNumber(phoneNumber);
-        if (!smsService.checkVerification(phoneNumber, code)) {
-            throw new ValidationException(ErrorCode.INVALID_VERIFICATION_CODE, "Invalid verification code");
-        }
 
         if (!user.isRegistrationCompleted()) {
             user.setRegistrationCompleted(true);
@@ -116,14 +111,8 @@ public class UserService {
 
         if (!user.isRegistrationCompleted()) {
             // Picks up an abandoned signup right where it left off - the FE routes this error to
-            // VerificationScreen, same as a fresh signup. If a code was already sent recently the
-            // resend is just skipped (rate limiter); an earlier code may still be valid, and the
-            // user can resend manually from that screen once the cooldown clears.
-            try {
-                sendUserPhoneVerification(user);
-            } catch (SmsRateLimitException e) {
-                log.info("Skipping verification resend on login for {} - rate limited", phoneNumber);
-            }
+            // VerificationScreen, same as a fresh signup, where the client re-triggers phone
+            // sign-in via the Firebase Auth SDK directly (no server-side resend needed anymore).
             throw new ValidationException(ErrorCode.PHONE_NOT_VERIFIED, "Phone number not verified");
         }
 
@@ -143,7 +132,7 @@ public class UserService {
         User user = getUserByPhoneNumber(phoneNumber);
         log.info("user with number {} forgot password", phoneNumber);
         user.setPasswordForgot(true);
-        sendUserPhoneVerification(user);
+        userRepository.save(user);
         return true;
     }
 
@@ -169,29 +158,6 @@ public class UserService {
                 .map(user -> user.setHomeAddress(placeMapper.placeDtoToPlace(homeAddress)))
                 .map(userRepository::save)
                 .orElseThrow(() -> new ValidationException(ErrorCode.ADD_HOME_ADDRESS_FAILED, "failed to add home address"));
-    }
-
-    public void sendUserPhoneVerification(String phoneNumber) {
-        sendUserPhoneVerification(getUserByPhoneNumber(phoneNumber));
-    }
-
-    /**
-     * Sends a verification SMS to the given user, enforcing an escalating cooldown
-     * (1 / 5 / 10 minutes) based on the user's recent SMS send history to prevent spam.
-     */
-    public void sendUserPhoneVerification(User user) {
-        long secondsRemaining = smsRateLimiter.secondsUntilNextAllowedSend(user.getSmsSentAt());
-        if (secondsRemaining > 0) {
-            throw new SmsRateLimitException(secondsRemaining);
-        }
-        String status = smsService.sendVerification(user.getPhoneNumber());
-        log.info("status {} of sms sending to {}", status, user.getPhoneNumber());
-        user.setSmsSentAt(smsRateLimiter.registerSend(user.getSmsSentAt()));
-        userRepository.save(user);
-    }
-
-    private static String getRandomNumberString() {
-        return String.format("%06d", new Random().nextInt(999999));
     }
 
     public User editUser(EditUserRequest editUserRequest, String phoneNumber) {

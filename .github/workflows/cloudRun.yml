@@ -32,17 +32,10 @@ jobs:
         env:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_USER: ${{ secrets.DB_USER }}
-          TWILIO_SID: ${{ vars.TWILIO_SID }}
-          TWILIO_TOKEN: ${{ vars.TWILIO_TOKEN }}
-          TWILIO_ID: ${{ vars.TWILIO_ID }}
-          TWILIO_VERIFY_SID: ${{ secrets.TWILIO_VERIFY_SID }}
         run: |
           docker build \
             --build-arg DB_PASSWORD=${DB_PASSWORD} \
             --build-arg DB_USER=${DB_USER} \
-            --build-arg TWILIO_TOKEN=${TWILIO_TOKEN} \
-            --build-arg TWILIO_ID=${TWILIO_ID} \
-            --build-arg TWILIO_VERIFY_SID=${TWILIO_VERIFY_SID} \
             -t gcr.io/$PROJECT_ID/$IMAGE_NAME:latest .
 
       - name: Push
@@ -54,10 +47,6 @@ jobs:
           DB_URI: ${{ secrets.DB_URI }}
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          TWILIO_SID: ${{ vars.TWILIO_SID }}
-          TWILIO_VERIFY_SID: ${{ secrets.TWILIO_VERIFY_SID }}
-          TWILIO_TOKEN: ${{ vars.TWILIO_TOKEN }}
-          TWILIO_ID: ${{ vars.TWILIO_ID }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
           gcloud run deploy taxirun \
@@ -66,4 +55,5 @@ jobs:
           --platform managed \
           --allow-unauthenticated \
           --project $PROJECT_ID \
-          --set-env-vars "^@^DB_USER=${DB_USER}@DB_PASSWORD=${DB_PASSWORD}@TWILIO_SID=${TWILIO_SID}@TWILIO_VERIFY_SID=${TWILIO_VERIFY_SID}@TWILIO_TOKEN=${TWILIO_TOKEN}@TWILIO_ID=${TWILIO_ID}@JWT_SECRET=${JWT_SECRET}"
+          --set-secrets "/secrets/firebase-adminsdk.json=firebase-adminsdk:latest" \
+          --set-env-vars "^@^DB_USER=${DB_USER}@DB_PASSWORD=${DB_PASSWORD}@JWT_SECRET=${JWT_SECRET}@FIREBASE_CREDENTIALS_PATH=/secrets/firebase-adminsdk.json"

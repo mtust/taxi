@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CodeRequest {
-    private String code;
-    private String phoneNumber;
+    /** Firebase ID token obtained client-side after completing phone sign-in via the Firebase Auth SDK. */
+    private String idToken;
 }

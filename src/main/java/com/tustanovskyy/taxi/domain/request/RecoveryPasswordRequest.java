@@ -11,7 +11,8 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class RecoveryPasswordRequest {
     private String phoneNumber;
-    private String code;
+    /** Firebase ID token obtained client-side after completing phone sign-in via the Firebase Auth SDK. */
+    private String idToken;
     private String password;
     private String passwordRetry;
 }

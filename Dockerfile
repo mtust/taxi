@@ -1,25 +1,17 @@
-FROM gradle:jdk21 as gradleimage
+FROM gradle:jdk25 as gradleimage
 COPY . /home/gradle/source
 WORKDIR /home/gradle/source
 
 ARG DB_URI
 ARG DB_USER
 ARG DB_PASSWORD
-ARG TWILIO_SID
-ARG TWILIO_TOKEN
-ARG TWILIO_ID
-ARG TWILIO_VERIFY_SID
 
 ENV DB_URI=$DB_URI
 ENV DB_PASSWORD=$DB_PASSWORD
 ENV DB_USER=$DB_USER
-ENV TWILIO_SID=$TWILIO_SID
-ENV TWILIO_TOKEN=$TWILIO_TOKEN
-ENV TWILIO_ID=$TWILIO_ID
-ENV TWILIO_VERIFY_SID=$TWILIO_VERIFY_SID
 
 RUN ./gradlew build -x test
-FROM eclipse-temurin:21
+FROM eclipse-temurin:25
 
 EXPOSE 8080
 #COPY --from=gradleimage /home/gradle/source/build/libs/*.jar app.jar
