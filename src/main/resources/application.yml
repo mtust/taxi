@@ -8,9 +8,6 @@ spring:
       detection-strategy: annotated
       return-body-on-create: true
       return-body-on-update: true
-  jackson:
-    serialization:
-      write_dates_as_timestamps: false
 
 firebase:
   # Path to the Firebase Admin SDK service account JSON key. Never commit this file - see
