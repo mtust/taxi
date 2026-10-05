@@ -9,5 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CodeRequest {
     /** Firebase ID token obtained client-side after completing phone sign-in via the Firebase Auth SDK. */
-    private String idToken;
+    private String code;
+    private String phoneNumber;
 }

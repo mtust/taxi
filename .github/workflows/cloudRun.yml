@@ -48,6 +48,9 @@ jobs:
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          OTP_SECRET: ${{ secrets.OTP_SECRET }}
+          SMSFLY_API_KEY: ${{ secrets.SMSFLY_API_KEY }}
+          SMSFLY_SENDER: ${{ vars.SMSFLY_SENDER }}
         run: |
           gcloud run deploy taxirun \
           --region us-central1 \
@@ -55,5 +58,4 @@ jobs:
           --platform managed \
           --allow-unauthenticated \
           --project $PROJECT_ID \
-          --set-secrets "/secrets/firebase-adminsdk.json=firebase-adminsdk:latest" \
-          --set-env-vars "^@^DB_USER=${DB_USER}@DB_PASSWORD=${DB_PASSWORD}@JWT_SECRET=${JWT_SECRET}@FIREBASE_CREDENTIALS_PATH=/secrets/firebase-adminsdk.json"
+          --set-env-vars "^@^DB_USER=${DB_USER}@DB_PASSWORD=${DB_PASSWORD}@JWT_SECRET=${JWT_SECRET}@OTP_SECRET=${OTP_SECRET}@SMSFLY_API_KEY=${SMSFLY_API_KEY}@SMSFLY_SENDER=${SMSFLY_SENDER}"

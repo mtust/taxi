@@ -9,6 +9,7 @@ import com.tustanovskyy.taxi.domain.request.SignUpRequest;
 import com.tustanovskyy.taxi.domain.response.LoginResponse;
 import com.tustanovskyy.taxi.domain.response.UserResponse;
 import com.tustanovskyy.taxi.exception.ErrorCode;
+import com.tustanovskyy.taxi.exception.SmsRateLimitException;
 import com.tustanovskyy.taxi.exception.ValidationException;
 import com.tustanovskyy.taxi.document.Chat;
 import com.tustanovskyy.taxi.mapper.PlaceMapper;
@@ -19,11 +20,13 @@ import com.tustanovskyy.taxi.repository.RatingRepository;
 import com.tustanovskyy.taxi.repository.RideRepository;
 import com.tustanovskyy.taxi.repository.UserRepository;
 import com.tustanovskyy.taxi.security.JwtTokenUtil;
+import com.tustanovskyy.taxi.service.otp.OtpService;
 import com.tustanovskyy.taxi.service.validatior.UserValidator;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -41,7 +44,7 @@ import org.springframework.stereotype.Service;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final FirebaseAuthService firebaseAuthService;
+    private final OtpService otpService;
     private final UserMapper userMapper;
     private final PlaceMapper placeMapper;
     private final PasswordEncoder passwordEncoder;
@@ -55,12 +58,19 @@ public class UserService {
     @Value("${taxi.user.deletion.retention-days:30}")
     private int deletionRetentionDays;
 
-    public User createUser(SignUpRequest user) {
+    public User createUser(SignUpRequest user, String clientIp) {
         userValidator.validateSignUpRequest(user);
-        // Phone verification is now driven client-side via the Firebase Auth SDK (see
-        // #validateCode) rather than triggered by the server, so no SMS is sent here.
-        return userRepository.save(userMapper.signUpRequestToUser(user)
+        var created = userRepository.save(userMapper.signUpRequestToUser(user)
                 .setPassword(passwordEncoder.encode(user.getPassword())));
+        try {
+            otpService.sendCode(created.getPhoneNumber(), clientIp);
+        } catch (ValidationException e) {
+            // Without a code the signup can't be finished, and leaving the record behind would
+            // block a retry with USER_ALREADY_EXISTS - so undo it and let the user try again.
+            userRepository.delete(created);
+            throw e;
+        }
+        return created;
     }
 
     public User findUser(String userId) {
@@ -85,8 +95,8 @@ public class UserService {
                 .collect(Collectors.toMap(User::getId, Function.identity()));
     }
 
-    public LoginResponse validateCode(String idToken) {
-        String phoneNumber = firebaseAuthService.verifyPhoneNumber(idToken);
+    public LoginResponse validateCode(String code, String phoneNumber) {
+        otpService.verify(phoneNumber, code);
         User user = getUserByPhoneNumber(phoneNumber);
 
         if (!user.isRegistrationCompleted()) {
@@ -98,7 +108,7 @@ public class UserService {
         return createLoginResponse(user);
     }
 
-    public LoginResponse login(String phoneNumber, String password) {
+    public LoginResponse login(String phoneNumber, String password, String clientIp) {
         // Deliberately not using getUserByPhoneNumber/USER_NOT_FOUND here: an unknown phone
         // number must look identical to a wrong password, otherwise the endpoint can be used
         // to enumerate which phone numbers are registered.
@@ -111,8 +121,14 @@ public class UserService {
 
         if (!user.isRegistrationCompleted()) {
             // Picks up an abandoned signup right where it left off - the FE routes this error to
-            // VerificationScreen, same as a fresh signup, where the client re-triggers phone
-            // sign-in via the Firebase Auth SDK directly (no server-side resend needed anymore).
+            // VerificationScreen, same as a fresh signup. If a code was already sent recently the
+            // resend is just skipped (rate limiter); the earlier code may still be valid, and the
+            // user can resend manually from that screen once the cooldown clears.
+            try {
+                otpService.sendCode(phoneNumber, clientIp);
+            } catch (SmsRateLimitException e) {
+                log.info("Skipping verification resend on login for {} - rate limited", phoneNumber);
+            }
             throw new ValidationException(ErrorCode.PHONE_NOT_VERIFIED, "Phone number not verified");
         }
 
@@ -128,12 +144,36 @@ public class UserService {
         return createLoginResponse(userRepository.save(user));
     }
 
-    public boolean forgotPassword(String phoneNumber) {
-        User user = getUserByPhoneNumber(phoneNumber);
+    /**
+     * Always reports success, whether or not the number belongs to an account, so this endpoint
+     * can't be used to find out which phone numbers are registered - a code is only actually sent
+     * if it does. Unknown numbers still count against the rate limits (see
+     * OtpService#registerRequest), so they're throttled identically too.
+     */
+    public boolean forgotPassword(String phoneNumber, String clientIp) {
+        Optional<User> existing = userRepository.findByPhoneNumber(phoneNumber);
+        if (existing.isEmpty()) {
+            otpService.registerRequest(phoneNumber, clientIp);
+            return true;
+        }
+        User user = existing.get();
         log.info("user with number {} forgot password", phoneNumber);
         user.setPasswordForgot(true);
         userRepository.save(user);
+        otpService.sendCode(phoneNumber, clientIp);
         return true;
+    }
+
+    /**
+     * Resends the verification code ("didn't get it" on the verification screen). Like
+     * {@link #forgotPassword}, silently does nothing for a number with no account.
+     */
+    public void resendVerificationCode(String phoneNumber, String clientIp) {
+        if (userRepository.findByPhoneNumber(phoneNumber).isEmpty()) {
+            otpService.registerRequest(phoneNumber, clientIp);
+            return;
+        }
+        otpService.sendCode(phoneNumber, clientIp);
     }
 
     private LoginResponse createLoginResponse(User user) {
@@ -198,7 +238,6 @@ public class UserService {
         user.setHomeAddress(null);
         user.setPhoneNumber("deleted-" + userId);
         user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
-        user.setSmsSentAt(null);
         user.setDeleted(true);
         user.setDeletedAt(LocalDateTime.now());
         userRepository.save(user);

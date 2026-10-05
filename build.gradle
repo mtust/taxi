@@ -55,7 +55,6 @@ dependencies {
 	testImplementation('org.mockito:mockito-core')
 	testImplementation('org.mockito:mockito-junit-jupiter')
 
-	implementation group: "com.google.firebase", name: "firebase-admin", version: "9.3.0"
 	annotationProcessor 'org.projectlombok:lombok:1.18.48'
     annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'

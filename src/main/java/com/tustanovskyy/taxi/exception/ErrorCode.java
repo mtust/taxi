@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 public enum ErrorCode {
     PASSWORDS_DO_NOT_MATCH(HttpStatus.BAD_REQUEST),
     PHONE_NUMBER_EMPTY(HttpStatus.BAD_REQUEST),
+    INVALID_PHONE_NUMBER(HttpStatus.BAD_REQUEST),
     USER_ALREADY_EXISTS(HttpStatus.CONFLICT),
     PHONE_NOT_VERIFIED(HttpStatus.BAD_REQUEST),
     /**
@@ -25,6 +26,8 @@ public enum ErrorCode {
     ACCESS_DENIED(HttpStatus.FORBIDDEN),
     ADD_HOME_ADDRESS_FAILED(HttpStatus.BAD_REQUEST),
     SMS_RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS),
+    /** The verification code couldn't be sent to this number (SMS provider failure or daily SMS cap). */
+    PHONE_VERIFICATION_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE),
     USER_HAS_ACTIVE_RIDE(HttpStatus.CONFLICT),
     RIDE_NOT_FOUND(HttpStatus.NOT_FOUND),
     RIDE_SCHEDULE_IN_PAST(HttpStatus.BAD_REQUEST),

@@ -12,7 +12,7 @@ import lombok.experimental.Accessors;
 public class RecoveryPasswordRequest {
     private String phoneNumber;
     /** Firebase ID token obtained client-side after completing phone sign-in via the Firebase Auth SDK. */
-    private String idToken;
+    private String code;
     private String password;
     private String passwordRetry;
 }

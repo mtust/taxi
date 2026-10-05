@@ -6,7 +6,7 @@ import com.tustanovskyy.taxi.domain.request.SignUpRequest;
 import com.tustanovskyy.taxi.exception.ErrorCode;
 import com.tustanovskyy.taxi.repository.UserRepository;
 import java.time.LocalDateTime;
-import com.tustanovskyy.taxi.service.FirebaseAuthService;
+import com.tustanovskyy.taxi.service.otp.OtpService;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 public class UserValidator extends BaseValidator{
 
     private final UserRepository userRepository;
-    private final FirebaseAuthService firebaseAuthService;
+    private final OtpService otpService;
 
     @Value("${taxi.user.code.active.minutes}")
     private Integer validationCodeActiveTime;
@@ -49,11 +49,8 @@ public class UserValidator extends BaseValidator{
     public void validateRecoveryPasswordRequest(RecoveryPasswordRequest request) {
         validate(() -> request.getPassword().equals(request.getPasswordRetry()),
                 ErrorCode.PASSWORDS_DO_NOT_MATCH, "Passwords do not match");
-        // The token proves ownership of a phone number on its own (Firebase signs it after the
-        // user completes phone sign-in) - it must match the phone number the request claims to
-        // be recovering, otherwise a token for one number could be used to reset another's password.
-        String verifiedPhoneNumber = firebaseAuthService.verifyPhoneNumber(request.getIdToken());
-        validate(() -> verifiedPhoneNumber.equals(request.getPhoneNumber()),
-                ErrorCode.INVALID_VERIFICATION_CODE, "Invalid verification code");
+        // Checked last - a code is single-use, so it mustn't be burned on a request that was
+        // going to be rejected anyway.
+        otpService.verify(request.getPhoneNumber(), request.getCode());
     }
 }

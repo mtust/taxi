@@ -9,10 +9,29 @@ spring:
       return-body-on-create: true
       return-body-on-update: true
 
-firebase:
-  # Path to the Firebase Admin SDK service account JSON key. Never commit this file - see
-  # .gitignore. Local dev: point it at the downloaded key file; Cloud Run: mount from Secret Manager.
-  credentials-path: ${FIREBASE_CREDENTIALS_PATH}
+# Phone verification codes - generated and checked by this backend, see OtpService.
+otp:
+  # Key for the HMAC the codes are stored under. Any long random string; MUST be set and kept
+  # stable (changing it just invalidates codes that are pending at that moment).
+  secret: ${OTP_SECRET}
+  ttl-minutes: 5
+  # Wrong guesses allowed per code before it's thrown away.
+  max-attempts: 5
+  # Rate limits on requesting a code. Per phone number - wait after the 1st, 2nd, 3rd... code sent
+  # in the last 24 hours (60s, 60s, 3 min, 5 min, then 60 min for every further one)...
+  resend-cooldowns-seconds: 60,60,180,300,3600
+  # ...and per caller IP (generous, since mobile carriers put many users behind one address).
+  max-per-ip-per-hour: 30
+  # Safety net against SMS-pumping fraud: the most SMS sent in any 24 hours, across all users.
+  # Once reached, no more SMS go out until older ones age out of the window.
+  sms-daily-limit: ${OTP_SMS_DAILY_LIMIT:500}
+
+smsfly:
+  url: ${SMSFLY_API_URL:https://sms-fly.ua/api/v2/api.php}
+  # Left empty, no codes can be sent.
+  api-key: ${SMSFLY_API_KEY:}
+  # Alpha name registered in the SMS-fly account.
+  sender: ${SMSFLY_SENDER:}
 
 server:
   port: ${PORT:8080}
