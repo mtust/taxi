@@ -40,6 +40,8 @@ public class SmsFlyClient {
      */
     public boolean send(String phoneNumber, String text, Duration ttl) {
         if (apiKey == null || apiKey.isBlank() || sender == null || sender.isBlank()) {
+            log.error("SMS-fly is not configured (SMSFLY_API_KEY set: {}, SMSFLY_SENDER set: {}) - cannot send SMS",
+                    apiKey != null && !apiKey.isBlank(), sender != null && !sender.isBlank());
             return false;
         }
         try {
