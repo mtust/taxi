@@ -3,6 +3,7 @@ package com.tustanovskyy.taxi.document;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -52,5 +53,11 @@ public class Ride {
     private LocalDateTime scheduledTo;
     /** True only when the user explicitly picked a future slot, for FE display purposes. */
     private Boolean isScheduled;
+
+    /**
+     * Ids of newer rides this ride's owner has already been sent a "partner found" push about -
+     * see RideService#notifyPotentialPartners. Keeps that push to at most one per ride pair.
+     */
+    private Set<String> partnerFoundNotifiedRideIds;
 
 }

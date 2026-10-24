@@ -60,6 +60,36 @@ public final class PushMessages {
             Map.entry("ar", "تم إلغاء الرحلة")
     );
 
+    private static final Map<String, String> PARTNER_FOUND_TITLE = Map.ofEntries(
+            Map.entry("en", "Ride partner found"),
+            Map.entry("uk", "Знайдено попутника"),
+            Map.entry("pl", "Znaleziono współpasażera"),
+            Map.entry("es", "Compañero de viaje encontrado"),
+            Map.entry("de", "Mitfahrer gefunden"),
+            Map.entry("fr", "Partenaire de trajet trouvé"),
+            Map.entry("th", "พบเพื่อนร่วมเดินทางแล้ว"),
+            Map.entry("ar", "تم العثور على شريك رحلة")
+    );
+
+    private static final Map<String, String> PARTNER_FOUND_BODY = Map.ofEntries(
+            Map.entry("en", "Someone is going your way - open the app to share the ride"),
+            Map.entry("uk", "Хтось їде у вашому напрямку - відкрийте застосунок, щоб поїхати разом"),
+            Map.entry("pl", "Ktoś jedzie w Twoją stronę - otwórz aplikację, aby pojechać razem"),
+            Map.entry("es", "Alguien va en tu dirección: abre la app para compartir el viaje"),
+            Map.entry("de", "Jemand fährt in deine Richtung - öffne die App, um die Fahrt zu teilen"),
+            Map.entry("fr", "Quelqu'un va dans votre direction - ouvrez l'app pour partager le trajet"),
+            Map.entry("th", "มีคนเดินทางไปทางเดียวกับคุณ - เปิดแอปเพื่อแชร์การเดินทาง"),
+            Map.entry("ar", "شخص ما يسير في اتجاهك - افتح التطبيق لمشاركة الرحلة")
+    );
+
+    public static String partnerFoundTitle(String language) {
+        return PARTNER_FOUND_TITLE.getOrDefault(language != null ? language : "en", PARTNER_FOUND_TITLE.get("en"));
+    }
+
+    public static String partnerFoundBody(String language) {
+        return PARTNER_FOUND_BODY.getOrDefault(language != null ? language : "en", PARTNER_FOUND_BODY.get("en"));
+    }
+
     public static String rideProposeBody(String language) {
         // Map.ofEntries() is an immutable map that throws NPE on a null key (unlike HashMap,
         // which handles null keys fine) - User#language is null for accounts that never

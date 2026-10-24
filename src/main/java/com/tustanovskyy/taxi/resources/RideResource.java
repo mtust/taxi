@@ -7,6 +7,7 @@ import com.tustanovskyy.taxi.domain.request.ChatRequest;
 import com.tustanovskyy.taxi.domain.request.RideRequest;
 import com.tustanovskyy.taxi.domain.response.ChatResponse;
 import com.tustanovskyy.taxi.domain.response.RideResponse;
+import com.tustanovskyy.taxi.domain.response.RideStatsResponse;
 import com.tustanovskyy.taxi.service.ChatService;
 import com.tustanovskyy.taxi.service.RideService;
 import com.tustanovskyy.taxi.service.UserService;
@@ -44,6 +45,14 @@ public class RideResource {
                                    @AuthenticationPrincipal String phoneNumber) {
         log.info("Creating ride for user with phone number: {}", phoneNumber);
         return rideService.createRide(ride, phoneNumber);
+    }
+
+    /** Real counts of other users' rides searching for a partner around the given point - see RideService#getRideStats. */
+    @GetMapping("/stats")
+    public RideStatsResponse rideStats(@RequestParam("lat") double latitude,
+                                       @RequestParam("lng") double longitude,
+                                       @AuthenticationPrincipal String phoneNumber) {
+        return rideService.getRideStats(latitude, longitude, userService.getUserByPhoneNumber(phoneNumber).getId());
     }
 
     @GetMapping("{id}")

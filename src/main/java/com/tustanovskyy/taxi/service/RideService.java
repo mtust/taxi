@@ -7,6 +7,7 @@ import com.tustanovskyy.taxi.domain.RideDetails;
 import com.tustanovskyy.taxi.domain.Sex;
 import com.tustanovskyy.taxi.domain.request.RideRequest;
 import com.tustanovskyy.taxi.domain.response.RideResponse;
+import com.tustanovskyy.taxi.domain.response.RideStatsResponse;
 import com.tustanovskyy.taxi.exception.ErrorCode;
 import com.tustanovskyy.taxi.exception.ValidationException;
 import com.tustanovskyy.taxi.mapper.RideMapper;
@@ -30,9 +31,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
+import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,6 +56,14 @@ public class RideService {
     private final UserService userService;
     private final RideMapper rideMapper;
     private final RideValidator rideValidator;
+    private final MongoTemplate mongoTemplate;
+
+    /** Radius Mongo uses for spherical geo queries ($near / $centerSphere), so distances computed here agree with it. */
+    private static final double MONGO_EARTH_RADIUS_METERS = 6378100;
+    /** Upper bound on any ride's walk distance (the FE caps it at 500 m) - only a pre-filter, see notifyPotentialPartners. */
+    private static final int PARTNER_NOTIFY_PREFILTER_RADIUS_METERS = 1000;
+    /** Roughly "the user's city" for the activity counts on the empty Partners screen. */
+    private static final int RIDE_STATS_RADIUS_KM = 25;
     @Value("${taxi.ride.active.minutes}")
     private Integer activeRideTime;
     @Value("${taxi.ride.schedule.max-advance-hours}")
@@ -86,7 +101,107 @@ public class RideService {
             rideDocument.setIsScheduled(false);
         }
         log.info("ride to store: {}", rideDocument);
-        return rideMapper.rideToRideDto(rideRepository.save(rideDocument));
+        Ride saved = rideRepository.save(rideDocument);
+        notifyPotentialPartners(saved);
+        return rideMapper.rideToRideDto(saved);
+    }
+
+    /**
+     * Pushes a "partner found" notification to owners of existing active/scheduled rides that
+     * the newly created ride would show up for in THEIR partner list (their walk distance, their
+     * searchOnlyFrom, overlapping windows - mirroring findPartnersRide from their side), so they
+     * don't have to keep the app open polling to find out someone matched. At most one push per
+     * ride pair (tracked in Ride#partnerFoundNotifiedRideIds). Never allowed to fail ride creation.
+     */
+    private void notifyPotentialPartners(Ride newRide) {
+        try {
+            // Pre-filter with a generous radius, then apply each candidate's own walk distance -
+            // a candidate with a wider radius than the new ride's would otherwise be missed.
+            List<Ride> candidates = rideRepository.findByIsActiveAndScheduledToAfterAndPlaceFromCoordinatesNear(
+                            true,
+                            LocalDateTime.now(),
+                            newRide.getPlaceFrom().getCoordinates(),
+                            new Distance((double) PARTNER_NOTIFY_PREFILTER_RADIUS_METERS / 1000, Metrics.KILOMETERS))
+                    .stream()
+                    .filter(ride -> !ride.getUserId().equals(newRide.getUserId()))
+                    .filter(ride -> ride.getAgreedPartnerUserId() == null)
+                    .filter(ride -> ride.getPartnerFoundNotifiedRideIds() == null
+                            || !ride.getPartnerFoundNotifiedRideIds().contains(newRide.getId()))
+                    .filter(ride -> schedulesOverlap(ride, newRide))
+                    .filter(ride -> isWithinWalkDistance(ride.getPlaceFrom(), newRide.getPlaceFrom()))
+                    .filter(ride -> ride.isSearchOnlyFrom() || isWithinWalkDistance(ride.getPlaceTo(), newRide.getPlaceTo()))
+                    .toList();
+            if (candidates.isEmpty()) {
+                return;
+            }
+
+            Map<String, User> usersById = userService.findUsersByIds(
+                    candidates.stream().map(Ride::getUserId).collect(Collectors.toSet()));
+            for (Ride candidate : candidates) {
+                User owner = usersById.get(candidate.getUserId());
+                if (owner == null) {
+                    continue;
+                }
+                expoPushService.send(owner.getPushToken(),
+                        PushMessages.partnerFoundTitle(owner.getLanguage()),
+                        PushMessages.partnerFoundBody(owner.getLanguage()),
+                        Map.of("type", "partner_found", "rideId", candidate.getId()));
+            }
+
+            // $addToSet rather than saving the loaded documents back, so a concurrent change to
+            // one of these rides (e.g. an agree landing at the same moment) isn't overwritten.
+            mongoTemplate.updateMulti(
+                    Query.query(Criteria.where("_id").in(candidates.stream().map(Ride::getId).toList())),
+                    new Update().addToSet("partnerFoundNotifiedRideIds", newRide.getId()),
+                    Ride.class);
+        } catch (Exception e) {
+            log.warn("Failed to notify potential partners of ride {}: {}", newRide.getId(), e.getMessage());
+        }
+    }
+
+    /**
+     * Whether {@code other} lies within {@code own}'s walk distance - the same check the geo
+     * queries in findPartnersRide apply from {@code own}'s side. Points are GeoJSON, i.e.
+     * [x, y] = [lng, lat] (see the FE's utils/geo.ts), computed on the same sphere Mongo's
+     * $near uses so this agrees exactly with what the candidate sees in their own partner list.
+     */
+    private boolean isWithinWalkDistance(Place own, Place other) {
+        if (own == null || other == null || own.getDistance() == null
+                || own.getCoordinates() == null || other.getCoordinates() == null) {
+            return false;
+        }
+        return sphericalDistanceMeters(own.getCoordinates(), other.getCoordinates()) <= own.getDistance();
+    }
+
+    static double sphericalDistanceMeters(Point a, Point b) {
+        double lat1 = Math.toRadians(a.getY());
+        double lat2 = Math.toRadians(b.getY());
+        double dLat = lat2 - lat1;
+        double dLng = Math.toRadians(b.getX() - a.getX());
+        double h = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        return 2 * MONGO_EARTH_RADIUS_METERS * Math.asin(Math.min(1, Math.sqrt(h)));
+    }
+
+    /**
+     * Real counts of other users' rides still searching for a partner within
+     * {@link #RIDE_STATS_RADIUS_KM} of the given point. Only active rides whose window hasn't
+     * ended count, and scheduled rides can't be more than max-advance-hours ahead, so this is
+     * effectively "today/tomorrow" activity around the caller.
+     */
+    public RideStatsResponse getRideStats(double latitude, double longitude, String excludeUserId) {
+        // GeoJSON order: x = longitude, y = latitude.
+        Circle area = new Circle(new Point(longitude, latitude),
+                RIDE_STATS_RADIUS_KM * 1000.0 / MONGO_EARTH_RADIUS_METERS);
+        Criteria base = Criteria.where("isActive").is(true)
+                .and("scheduledTo").gt(LocalDateTime.now())
+                .and("placeFrom.coordinates").withinSphere(area);
+        if (excludeUserId != null) {
+            base = base.and("userId").ne(excludeUserId);
+        }
+        long total = mongoTemplate.count(Query.query(base), Ride.class);
+        long scheduled = mongoTemplate.count(Query.query(Criteria.where("isScheduled").is(true)).addCriteria(base), Ride.class);
+        return new RideStatsResponse(total - scheduled, scheduled, RIDE_STATS_RADIUS_KM);
     }
 
     @Transactional
