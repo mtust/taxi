@@ -200,7 +200,7 @@ public class ChatService {
             return;
         }
         User recipient = userService.findUser(recipientId);
-        String senderName = (sender.getFirstName() + " " + sender.getLastName()).trim();
+        String senderName = sender.displayName();
         String preview;
         if (savedMessage.getType() == Message.MessageType.TEXT) {
             String content = savedMessage.getContent() == null ? "" : savedMessage.getContent();
@@ -290,7 +290,7 @@ public class ChatService {
 
                     Map<String, Object> participant = new LinkedHashMap<>();
                     participant.put("userId", id);
-                    participant.put("name", user != null ? (user.getFirstName() + " " + user.getLastName()).trim() : null);
+                    participant.put("name", user != null ? user.displayName() : null);
                     participant.put("fromAddress", ride != null && ride.getPlaceFrom() != null ? ride.getPlaceFrom().getName() : null);
                     participant.put("toAddress", ride != null && ride.getPlaceTo() != null ? ride.getPlaceTo().getName() : null);
                     return participant;
@@ -315,7 +315,7 @@ public class ChatService {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("kind", kind);
         payload.put("actorUserId", actorUserId);
-        payload.put("actorName", actor != null ? (actor.getFirstName() + " " + actor.getLastName()).trim() : null);
+        payload.put("actorName", actor != null ? actor.displayName() : null);
 
         return toJson(payload, fallback);
     }
@@ -341,9 +341,9 @@ public class ChatService {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("kind", "ratingSubmitted");
         payload.put("raterUserId", raterUserId);
-        payload.put("raterName", rater != null ? (rater.getFirstName() + " " + rater.getLastName()).trim() : null);
+        payload.put("raterName", rater != null ? rater.displayName() : null);
         payload.put("ratedUserId", ratedUserId);
-        payload.put("ratedName", rated != null ? (rated.getFirstName() + " " + rated.getLastName()).trim() : null);
+        payload.put("ratedName", rated != null ? rated.displayName() : null);
         payload.put("score", score);
         payload.put("comment", comment);
 

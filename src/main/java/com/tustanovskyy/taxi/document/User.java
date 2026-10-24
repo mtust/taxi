@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.LocalDateTime;
 import com.tustanovskyy.taxi.domain.Role;
 import com.tustanovskyy.taxi.domain.Sex;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import org.apache.commons.lang3.StringUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -79,4 +82,15 @@ public class User {
     @JsonIgnore
     private LocalDateTime deletedAt;
 
+
+    /**
+     * "First Last" for showing this user to others (push titles, chat system messages). Last name
+     * is optional at signup, so it must never render as "Ivan null".
+     */
+    public String displayName() {
+        return Stream.of(firstName, lastName)
+                .filter(StringUtils::isNotBlank)
+                .map(String::trim)
+                .collect(Collectors.joining(" "));
+    }
 }

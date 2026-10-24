@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -62,8 +63,10 @@ public class RideService {
         if (!rideRepository.findByUserIdAndIsActiveOrderByDateDesc(userId, true).isEmpty()) {
             log.error("user {} already have active rides", userId);
             throw new ValidationException(ErrorCode.USER_HAS_ACTIVE_RIDE,
-                    "user " + user.getFirstName() + " " + user.getLastName() + " already have active rides. Please cancel active ride",
-                    Map.of("firstName", user.getFirstName(), "lastName", user.getLastName()));
+                    "user " + user.displayName() + " already have active rides. Please cancel active ride",
+                    // Map.of rejects nulls, and lastName is optional
+                    Map.of("firstName", Objects.toString(user.getFirstName(), ""),
+                            "lastName", Objects.toString(user.getLastName(), "")));
         }
         Ride rideDocument = rideMapper.rideDtoToRide(ride);
         rideDocument.setUserId(userId);
@@ -263,7 +266,7 @@ public class RideService {
 
     private void notifyPartnerOfAgreement(String partnerUserId, User proposer, boolean isAccept) {
         User partner = userService.findUser(partnerUserId);
-        String proposerName = (proposer.getFirstName() + " " + proposer.getLastName()).trim();
+        String proposerName = proposer.displayName();
         String body = isAccept
                 ? PushMessages.rideAcceptedBody(partner.getLanguage())
                 : PushMessages.rideProposeBody(partner.getLanguage());

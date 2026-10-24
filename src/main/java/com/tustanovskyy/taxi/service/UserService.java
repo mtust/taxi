@@ -31,6 +31,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import org.apache.commons.lang3.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -60,6 +61,9 @@ public class UserService {
 
     public User createUser(SignUpRequest user, String clientIp) {
         userValidator.validateSignUpRequest(user);
+        // Last name and email are optional - store "not given" as null rather than "".
+        user.setLastName(StringUtils.trimToNull(user.getLastName()));
+        user.setEmail(StringUtils.trimToNull(user.getEmail()));
         var created = userRepository.save(userMapper.signUpRequestToUser(user)
                 .setPassword(passwordEncoder.encode(user.getPassword())));
         try {
@@ -203,8 +207,8 @@ public class UserService {
     public User editUser(EditUserRequest editUserRequest, String phoneNumber) {
         User user = this.getUserByPhoneNumber(phoneNumber);
         user.setFirstName(editUserRequest.getFirstName());
-        user.setLastName(editUserRequest.getLastName());
-        user.setEmail(editUserRequest.getEmail());
+        user.setLastName(StringUtils.trimToNull(editUserRequest.getLastName()));
+        user.setEmail(StringUtils.trimToNull(editUserRequest.getEmail()));
         return userRepository.save(user);
     }
 
