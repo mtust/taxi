@@ -60,4 +60,7 @@ public class Ride {
      */
     private Set<String> partnerFoundNotifiedRideIds;
 
+    /** Id of this ride's post in the public Telegram rides channel, if any - see TelegramRidePublisher. */
+    private Long telegramMessageId;
+
 }

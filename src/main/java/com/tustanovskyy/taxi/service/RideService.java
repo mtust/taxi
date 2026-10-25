@@ -17,6 +17,7 @@ import com.tustanovskyy.taxi.repository.MessageRepository;
 import com.tustanovskyy.taxi.repository.RideRepository;
 import com.tustanovskyy.taxi.service.notification.ExpoPushService;
 import com.tustanovskyy.taxi.service.notification.PushMessages;
+import com.tustanovskyy.taxi.service.notification.telegram.TelegramRidePublisher;
 import com.tustanovskyy.taxi.service.validatior.RideValidator;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -57,6 +58,7 @@ public class RideService {
     private final RideMapper rideMapper;
     private final RideValidator rideValidator;
     private final MongoTemplate mongoTemplate;
+    private final TelegramRidePublisher telegramRidePublisher;
 
     /** Radius Mongo uses for spherical geo queries ($near / $centerSphere), so distances computed here agree with it. */
     private static final double MONGO_EARTH_RADIUS_METERS = 6378100;
@@ -103,6 +105,7 @@ public class RideService {
         log.info("ride to store: {}", rideDocument);
         Ride saved = rideRepository.save(rideDocument);
         notifyPotentialPartners(saved);
+        telegramRidePublisher.publishNewRide(saved);
         return rideMapper.rideToRideDto(saved);
     }
 
@@ -294,6 +297,7 @@ public class RideService {
     public void cancelRide(Ride ride) {
         ride.setIsActive(false);
         rideRepository.save(ride);
+        telegramRidePublisher.markRideEnded(ride);
     }
 
     @Scheduled(fixedRate = 60000)
@@ -304,6 +308,7 @@ public class RideService {
             log.info("Deactivating {} rides whose search window ended before {}", oldRides.size(), now);
             oldRides.forEach(ride -> ride.setIsActive(false));
             rideRepository.saveAll(oldRides);
+            oldRides.forEach(telegramRidePublisher::markRideEnded);
         }
     }
 
@@ -423,6 +428,7 @@ public class RideService {
         ride.setIsActive(false);
         ride.setIsCompleted(true);
         rideRepository.save(ride);
+        telegramRidePublisher.markRideEnded(ride);
 
         if (ride.getAgreedPartnerUserId() != null) {
             Ride partnerRide = findActiveRideByUserId(ride.getAgreedPartnerUserId());
@@ -432,6 +438,7 @@ public class RideService {
                 partnerRide.setIsActive(false);
                 partnerRide.setIsCompleted(true);
                 rideRepository.save(partnerRide);
+                telegramRidePublisher.markRideEnded(partnerRide);
             }
         }
     }

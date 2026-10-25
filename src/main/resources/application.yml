@@ -33,6 +33,21 @@ smsfly:
   # Alpha name registered in the SMS-fly account.
   sender: ${SMSFLY_SENDER:}
 
+# Public Telegram channel where new rides are posted - see TelegramRidePublisher. Off unless
+# TELEGRAM_RIDES_ENABLED=true and both the bot token and channel id are set; the bot must be an admin
+# of the channel.
+telegram:
+  bot-token: ${TELEGRAM_BOT_TOKEN:}
+  rides:
+    enabled: ${TELEGRAM_RIDES_ENABLED:false}
+    # "@channel_username" or the numeric id ("-100...").
+    channel-id: ${TELEGRAM_CHANNEL_ID:}
+    # Where the post's "Приєднатися" button leads.
+    join-url: ${TELEGRAM_RIDES_JOIN_URL:https://play.google.com/store/apps/details?id=com.hurtom.taxi}
+    max-posts-per-hour: ${TELEGRAM_RIDES_MAX_POSTS_PER_HOUR:20}
+    # Ride times are shown in this zone.
+    time-zone: ${TELEGRAM_RIDES_TIME_ZONE:Europe/Kyiv}
+
 server:
   port: ${PORT:8080}
   error:

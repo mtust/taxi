@@ -26,6 +26,7 @@ import com.tustanovskyy.taxi.repository.ChatRepository;
 import com.tustanovskyy.taxi.repository.MessageRepository;
 import com.tustanovskyy.taxi.repository.RideRepository;
 import com.tustanovskyy.taxi.service.notification.ExpoPushService;
+import com.tustanovskyy.taxi.service.notification.telegram.TelegramRidePublisher;
 import com.tustanovskyy.taxi.service.validatior.RideValidator;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -59,6 +60,7 @@ class RideServicePartnerFoundTest {
     private UserService userService;
     private RideMapper rideMapper;
     private MongoTemplate mongoTemplate;
+    private TelegramRidePublisher telegramRidePublisher;
     private RideService rideService;
 
     private final User me = new User().setId("me");
@@ -71,8 +73,9 @@ class RideServicePartnerFoundTest {
         userService = mock(UserService.class);
         rideMapper = mock(RideMapper.class);
         mongoTemplate = mock(MongoTemplate.class);
+        telegramRidePublisher = mock(TelegramRidePublisher.class);
         rideService = new RideService(rideRepository, mock(ChatRepository.class), mock(MessageRepository.class),
-                expoPushService, userService, rideMapper, mock(RideValidator.class), mongoTemplate);
+                expoPushService, userService, rideMapper, mock(RideValidator.class), mongoTemplate, telegramRidePublisher);
         ReflectionTestUtils.setField(rideService, "activeRideTime", 30);
 
         when(userService.findByPhoneNumber(PHONE)).thenReturn(me);
@@ -192,5 +195,34 @@ class RideServicePartnerFoundTest {
 
         assertEquals(ErrorCode.USER_HAS_ACTIVE_RIDE, e.getCode());
         assertEquals(Map.of("firstName", "Ivan", "lastName", ""), e.getParams());
+    }
+
+    @Test
+    void newRideIsPublishedToTheTelegramChannel() {
+        createRideMatching();
+
+        ArgumentCaptor<Ride> published = ArgumentCaptor.forClass(Ride.class);
+        verify(telegramRidePublisher).publishNewRide(published.capture());
+        assertEquals("new-ride", published.getValue().getId());
+    }
+
+    @Test
+    void cancelledRideMarksItsTelegramPost() {
+        Ride ride = Ride.builder().id("r").isActive(true).telegramMessageId(42L).build();
+
+        rideService.cancelRide(ride);
+
+        verify(telegramRidePublisher).markRideEnded(ride);
+        assertEquals(false, ride.getIsActive());
+    }
+
+    @Test
+    void expiredRidesMarkTheirTelegramPosts() {
+        Ride expired = Ride.builder().id("r").isActive(true).build();
+        when(rideRepository.findByIsActiveTrueAndScheduledToBefore(any())).thenReturn(List.of(expired));
+
+        rideService.deactivateOldRides();
+
+        verify(telegramRidePublisher).markRideEnded(expired);
     }
 }
