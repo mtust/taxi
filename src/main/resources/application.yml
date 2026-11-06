@@ -77,3 +77,12 @@ taxi:
       # Days a soft-deleted account (and its rides/chats/messages/ratings) is retained before
       # being permanently purged - see UserService#purgeDeletedAccounts.
       retention-days: 30
+  app:
+    # Forced update - see AppConfigResources. An app build below its platform's min-version
+    # shows a blocking "update the app" screen. 0.0.0 blocks nothing.
+    min-version:
+      android: ${APP_MIN_VERSION_ANDROID:0.0.0}
+      ios: ${APP_MIN_VERSION_IOS:0.0.0}
+    store-url:
+      android: https://play.google.com/store/apps/details?id=com.hurtom.taxi
+      ios: https://apps.apple.com/app/id6774705482
